@@ -1,0 +1,92 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/green_primary"
+    tools:context=".Login">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="8dp"
+        android:background="@drawable/bg_login_pop"
+        android:paddingRight="@dimen/login_pop_vertical_padding"
+        android:paddingLeft="@dimen/login_pop_vertical_padding"
+        android:paddingTop="@dimen/login_pop_horizontal_padding"
+        android:paddingBottom="@dimen/login_pop_horizontal_padding">
+
+        <TextView
+            android:layout_alignParentTop="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/et_login_account"
+            android:text="经纬"
+            android:textSize="65sp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"
+            android:textColor="#99000000"
+            android:id="@+id/login_pop_logo"/>
+
+        <EditText
+            android:layout_below="@+id/login_pop_logo"
+            android:id="@+id/et_login_account"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/login_pop_items_margin"
+            android:ems="18"
+            android:hint="@string/login_account"
+            android:inputType="textEmailAddress"
+            android:textSize="@dimen/et_text_size" />
+
+        <EditText
+            android:id="@+id/et_login_password"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/et_login_account"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/login_pop_items_margin"
+            android:ems="18"
+            android:hint="@string/login_password"
+            android:inputType="textPassword"
+            android:textSize="@dimen/et_text_size" />
+
+        <TextView
+            android:id="@+id/login_pop_divider"
+            android:background="@android:color/transparent"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:layout_centerHorizontal="true" />
+
+        <Button
+            android:id="@+id/btn_login"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/et_login_password"
+            android:layout_below="@+id/et_login_password"
+            android:layout_marginTop="@dimen/login_pop_items_margin"
+            android:layout_toLeftOf="@id/login_pop_divider"
+            android:background="@drawable/bg_btn"
+            android:text="@string/login_log_in"
+            android:textColor="@color/green_primary"
+            android:textSize="@dimen/btn_text_size" />
+
+        <Button
+            android:id="@+id/btn_logon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignRight="@+id/et_login_password"
+            android:layout_below="@+id/et_login_password"
+            android:layout_marginTop="@dimen/login_pop_items_margin"
+            android:layout_toRightOf="@id/login_pop_divider"
+            android:background="@drawable/bg_btn"
+            android:text="@string/login_sign_in"
+            android:textColor="@color/btn_negative"
+            android:textSize="@dimen/btn_text_size" />
+
+
+    </RelativeLayout>
+
+</RelativeLayout>

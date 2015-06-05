@@ -1,0 +1,12 @@
+<resources>
+
+    <style name="AppTheme" parent="AppThemeBase">
+        <!--<item name="android:colorPrimary">@color/material_primary</item>-->
+        <!--<item name="android:colorPrimaryDark">@color/material_primary_dark</item>-->
+        <item name="android:colorAccent">@color/material_accent</item>
+
+        <!--<item name="android:navigationBarColor">@color/material_navigation_bar_color</item>-->
+        <!--<item name="android:statusBarColor">@color/material_status_bar_color</item>-->
+    </style>
+
+</resources>

@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Latitude</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_edit">修改</string>
+    <string name="action_add">添加</string>
+
+    <string name="login_account">帐号</string>
+    <string name="login_password">密码</string>
+    <string name="login_log_in">登录</string>
+    <string name="login_sign_in">注册</string>
+
+    <string name="toast_input_account">帐号缺失</string>
+    <string name="toast_input_password">密码缺失</string>
+    <string name="toast_logon_failed">注册失败，请重试</string>
+    <string name="toast_logon_succeed">已注册，登录中</string>
+    <string name="toast_network_error">网络错误，请重试</string>
+
+    <string name="title_activity_main">经纬</string>
+
+    <string name="dialog_remove_marker_message">移除标记？</string>
+
+    <string name="dialog_confirm_logon_title">账号不存在</string>
+    <string name="dialog_confirm_logon_message">是否创建账号？</string>
+
+    <string name="dialog_add_marker_title">添加标记</string>
+    <string name="dialog_add_marker_hint_name">名称</string>
+    <string name="dialog_add_marker_hint_snippet">信息(选填)</string>
+</resources>

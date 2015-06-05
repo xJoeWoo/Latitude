@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 圓角，Layout佈局圓角幅度設定值 -->
+    <corners
+        android:radius="@dimen/bg_login_pop_corner_radius"
+        />
+
+    <!-- 框內底部顏色 -->
+    <solid
+        android:color="@android:color/white"
+        />
+
+</shape>

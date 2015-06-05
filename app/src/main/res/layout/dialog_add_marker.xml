@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:padding="@dimen/login_pop_horizontal_padding"
+    android:id="@+id/dialog_add_marker_rv"
+    android:layout_centerHorizontal="true">
+
+    <EditText
+        android:id="@+id/et_dialog_name"
+        android:layout_marginTop="@dimen/login_pop_items_margin"
+        android:layout_alignParentTop="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/dialog_add_marker_hint_name"
+        android:ems="8" />
+
+    <EditText
+        android:layout_marginTop="@dimen/login_pop_items_margin"
+        android:id="@+id/et_dialog_snippet"
+        android:layout_below="@id/et_dialog_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/dialog_add_marker_hint_snippet"
+        android:ems="8" />
+
+</RelativeLayout>
