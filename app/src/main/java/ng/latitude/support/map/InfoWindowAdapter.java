@@ -33,18 +33,18 @@ public class InfoWindowAdapter implements AMap.InfoWindowAdapter {
         TextView tvTitle = (TextView) view.findViewById(R.id.widget_marker_info_window_title);
         TextView tvSnippet = (TextView) view.findViewById(R.id.widget_marker_info_window_snippet);
 
-        if (marker.getSnippet() == null && marker.getTitle() == null)
+        if (marker.getSnippet().isEmpty() && marker.getTitle().isEmpty())
             view.setVisibility(View.GONE);
         else {
-            if (marker.getSnippet() != null)
+            if (marker.getTitle().isEmpty())
+                tvTitle.setVisibility(View.GONE);
+            else
                 tvTitle.setText(marker.getTitle());
-            else
-                tvSnippet.setVisibility(View.GONE);
 
-            if (marker.getSnippet() != null)
-                tvSnippet.setText(marker.getSnippet());
-            else
+            if (marker.getSnippet().isEmpty())
                 tvSnippet.setVisibility(View.GONE);
+            else
+                tvSnippet.setText(marker.getSnippet());
         }
     }
 }

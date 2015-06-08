@@ -31,6 +31,9 @@ import ng.latitude.support.ui.GravityInterpolator;
 
 
 public class LoginActivity extends AppCompatActivity {
+
+    private static final boolean DEBUG = true;
+
     private Button btnLogin;
     private Button btnLogon;
     private EditText etAccount;
@@ -45,8 +48,14 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.act_login);
 
         findViews();
-
         setListeners();
+
+
+        if (DEBUG) {
+            etAccount.setText("ng");
+            etPassword.setText("233");
+            requestLogin();
+        }
     }
 
     private void findViews() {
@@ -138,10 +147,10 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private boolean checkInput() {
-        if (!etAccount.getText().toString().equals("") && !etPassword.getText().toString().equals("")) {
+        if (!etAccount.getText().toString().isEmpty() && !etPassword.getText().toString().isEmpty()) {
             return true;
         } else {
-            if (etAccount.getText().toString().equals("")) {
+            if (etAccount.getText().toString().isEmpty()) {
                 Toast.makeText(this, R.string.toast_input_account, Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, R.string.toast_input_password, Toast.LENGTH_SHORT).show();

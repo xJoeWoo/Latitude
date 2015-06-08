@@ -15,10 +15,11 @@ import ng.latitude.support.conf.Constants;
 /**
  * Created by Ng on 15/6/3.
  */
-public class BottomInfo extends BottomButtons{
+public class BottomInfo extends BottomButtons {
 
     private TextView main;
     private TextView sub;
+    private ObjectAnimator oa;
 
     public BottomInfo(Context context) {
         super(context);
@@ -39,15 +40,42 @@ public class BottomInfo extends BottomButtons{
         super(context, attrs, defStyleAttr);
     }
 
-    public void startBlink(){
-        ObjectAnimator oa = ObjectAnimator.ofFloat(main, Constants.OBJECT_ANIM_ALPHA, 1f, 0f).setDuration((long)(Constants.ANIM_BUTTON_ALPHA_DURATION *1.5));
+    @Override
+    public void show() {
+        super.show();
+        startBlink();
+    }
+
+    @Override
+    public void hide() {
+        super.hide();
+        stopBlink();
+    }
+
+    public void startBlink() {
+        oa = ObjectAnimator.ofFloat(main, Constants.OBJECT_ANIM_ALPHA, 1f, 0f).setDuration((long) (Constants.ANIM_BUTTON_ALPHA_DURATION * 1.5));
         oa.setInterpolator(new LinearInterpolator());
         oa.setRepeatCount(ValueAnimator.INFINITE);
         oa.setRepeatMode(ValueAnimator.REVERSE);
         oa.start();
     }
 
-    public void stopBlink(){
+    public void stopBlink() {
+        oa.cancel();
+        main.setAlpha(1f);
+    }
 
+    public void setMainText(int id) {
+        main.setText(id);
+    }
+
+    public void setSubText(int id) {
+        sub.setText(id);
+    }
+
+    public void reset() {
+        main.setText(R.string.widget_bottom_info_main);
+        main.setText(R.string.widget_bottom_info_sub);
+        stopBlink();
     }
 }

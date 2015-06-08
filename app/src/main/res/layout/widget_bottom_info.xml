@@ -24,7 +24,7 @@
             android:layout_centerHorizontal="true"
             android:gravity="center"
             android:textSize="@dimen/tv_text_size_main"
-            android:text="定位中…"/>
+            android:text="@string/widget_bottom_info_main"/>
 
         <TextView
             android:layout_marginTop="1dp"
@@ -35,7 +35,7 @@
             android:layout_centerHorizontal="true"
             android:textSize="@dimen/tv_text_size_sub"
             android:gravity="center"
-            android:text="请确保处在空旷地方"/>
+            android:text="@string/widget_bottom_info_sub"/>
 
 
     </RelativeLayout>
