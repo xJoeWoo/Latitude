@@ -12,6 +12,9 @@
     <dimen name="et_text_size">20sp</dimen>
     <dimen name="tv_text_size_main">22sp</dimen>
     <dimen name="tv_text_size_sub">15sp</dimen>
+    <dimen name="rb_text_size">25sp</dimen>
+
+    <dimen name="rb_dialog_width">124dp</dimen>
 
     <dimen name="info_window_title_text_size">20sp</dimen>
     <dimen name="info_window_snippet_text_size">15sp</dimen>

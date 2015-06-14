@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <RadioGroup
+        android:id="@+id/dialog_select_force_rg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/dialog_select_force_rb_1"
+            android:layout_width="@dimen/rb_dialog_width"
+            android:layout_height="@dimen/rb_dialog_width"
+            android:layout_marginRight="8dp"
+            android:background="@drawable/bg_dialog_select_force_1"
+            android:button="@android:color/transparent"
+            android:gravity="center"
+            android:text="@string/dialog_select_force_1"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/rb_text_size" />
+
+        <RadioButton
+            android:id="@+id/dialog_select_force_rb_2"
+            android:layout_width="@dimen/rb_dialog_width"
+            android:layout_height="@dimen/rb_dialog_width"
+            android:background="@drawable/bg_dialog_select_force_2"
+            android:button="@android:color/transparent"
+            android:gravity="center"
+            android:text="@string/dialog_select_force_2"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/rb_text_size" />
+
+    </RadioGroup>
+
+</RelativeLayout>

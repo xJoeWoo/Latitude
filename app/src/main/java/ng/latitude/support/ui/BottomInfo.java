@@ -20,6 +20,8 @@ public class BottomInfo extends BottomButtons {
     private TextView main;
     private TextView sub;
     private ObjectAnimator oa;
+    private boolean state = false;
+    private int textColor;
 
     public BottomInfo(Context context) {
         super(context);
@@ -33,6 +35,8 @@ public class BottomInfo extends BottomButtons {
         main = (TextView) v.findViewById(R.id.widget_bottom_info_main);
         sub = (TextView) v.findViewById(R.id.widget_bottom_info_sub);
 
+        textColor = sub.getCurrentTextColor();
+
         startBlink();
     }
 
@@ -42,14 +46,21 @@ public class BottomInfo extends BottomButtons {
 
     @Override
     public void show() {
-        super.show();
-        startBlink();
+        if (!state) {
+            state = true;
+            super.show();
+            startBlink();
+
+        }
     }
 
     @Override
     public void hide() {
-        super.hide();
-        stopBlink();
+        if (state) {
+            state = false;
+            super.hide();
+            stopBlink();
+        }
     }
 
     public void startBlink() {
@@ -71,11 +82,18 @@ public class BottomInfo extends BottomButtons {
 
     public void setSubText(int id) {
         sub.setText(id);
+
+        if (id == R.string.widget_bottom_info_sub_gps_not_available)
+            sub.setTextColor(getResources().getColor(R.color.red_warning));
+        else
+            sub.setTextColor(textColor);
     }
 
     public void reset() {
         main.setText(R.string.widget_bottom_info_main);
-        main.setText(R.string.widget_bottom_info_sub);
+        sub.setText(R.string.widget_bottom_info_sub);
+        main.setTextColor(textColor);
+        sub.setTextColor(textColor);
         stopBlink();
     }
 }

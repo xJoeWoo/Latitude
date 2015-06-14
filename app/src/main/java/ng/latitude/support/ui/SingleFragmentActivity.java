@@ -53,6 +53,8 @@ public abstract class SingleFragmentActivity extends AppCompatActivity {
                 super.onBackPressed();
     }
 
+    public enum BackStatus {Normal, SettingPosition}
+
     public interface OnBackPressedListener {
 
         /**

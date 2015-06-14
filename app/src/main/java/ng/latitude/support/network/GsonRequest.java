@@ -3,6 +3,7 @@ package ng.latitude.support.network;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
 import com.android.volley.Request;
@@ -31,6 +32,8 @@ public class GsonRequest<T> extends Request<T> {
         this.clazz = clazz;
         this.params = params;
         this.listener = listener;
+
+        setRetryPolicy(new DefaultRetryPolicy(Constants.NETWORK_TIMEOUT, Constants.NETWORK_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
     }
 
     @Override
@@ -42,6 +45,7 @@ public class GsonRequest<T> extends Request<T> {
     protected Map<String, String> getParams() throws AuthFailureError {
         return params;
     }
+
 
     @Override
     protected void deliverResponse(T response) {

@@ -7,6 +7,8 @@
 
     <string name="login_account">帐号</string>
     <string name="login_password">密码</string>
+    <string name="login_password_confirm">密码确认</string>
+    <string name="login_nick_name">昵称</string>
     <string name="login_log_in">登录</string>
     <string name="login_sign_in">注册</string>
 
@@ -19,19 +21,25 @@
     <string name="title_activity_main">经纬</string>
 
     <string name="widget_bottom_info_main">定位中…</string>
-    <string name="widget_bottom_info_main_gps">精准定位中…</string>
+    <string name="widget_bottom_info_main_gps">精确定位中…</string>
     <string name="widget_bottom_info_main_lbs">网络定位中…</string>
     <string name="widget_bottom_info_sub">请确保处在空旷地方</string>
+    <string name="widget_bottom_info_sub_gps_not_available">注意：GPS未开启</string>
 
     <string name="dialog_remove_marker_message">移除标记？</string>
 
     <string name="dialog_confirm_logon_title">账号不存在</string>
     <string name="dialog_confirm_logon_message">是否创建账号？</string>
 
-    <string name="dialog_add_marker_title">添加标记</string>
+    <string name="dialog_add_marker_title">创建据点</string>
     <string name="dialog_add_marker_hint_name">名称</string>
     <string name="dialog_add_marker_hint_snippet">信息(选填)</string>
-    <string name="title_activity_main_activity2">MainActivity2Activity</string>
+    <string name="dialog_add_marker_creating">创建中…</string>
+
+    <string name="dialog_select_force_title">决定团队</string>
+    <string name="dialog_select_force_select">请决定你的团队</string>
+    <string name="dialog_select_force_1">Force 1</string>
+    <string name="dialog_select_force_2">Force 2</string>
 
     <string name="title_section1">Section 1</string>
     <string name="title_section2">Section 2</string>

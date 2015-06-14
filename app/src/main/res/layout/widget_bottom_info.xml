@@ -11,31 +11,30 @@
         android:background="@drawable/shadow_bottom_buttons"/>
 
     <RelativeLayout
-        android:layout_below="@+id/widget_bottom_info_shadow"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
+        android:layout_below="@+id/widget_bottom_info_shadow"
         android:background="@android:color/white">
 
         <TextView
-            android:layout_marginTop="2dp"
             android:id="@+id/widget_bottom_info_main"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
+            android:layout_marginTop="1dp"
             android:gravity="center"
-            android:textSize="@dimen/tv_text_size_main"
-            android:text="@string/widget_bottom_info_main"/>
+            android:text="@string/widget_bottom_info_main"
+            android:textSize="@dimen/tv_text_size_main" />
 
         <TextView
-            android:layout_marginTop="1dp"
             android:id="@+id/widget_bottom_info_sub"
-            android:layout_below="@+id/widget_bottom_info_main"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_below="@+id/widget_bottom_info_main"
             android:layout_centerHorizontal="true"
-            android:textSize="@dimen/tv_text_size_sub"
             android:gravity="center"
-            android:text="@string/widget_bottom_info_sub"/>
+            android:text="@string/widget_bottom_info_sub"
+            android:textSize="@dimen/tv_text_size_sub" />
 
 
     </RelativeLayout>

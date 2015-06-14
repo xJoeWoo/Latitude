@@ -1,51 +1,51 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rv_main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/rv_main" >
+    android:layout_height="match_parent">
 
     <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_alignParentTop="true"
+        android:id="@+id/tb_map"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
+        android:layout_alignParentTop="true"
         android:background="?attr/colorPrimary"/>
 
 
     <com.amap.api.maps.MapView
-        android:layout_below="@+id/toolbar"
         android:id="@+id/map_main"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_below="@+id/tb_map" />
 
 
     <ImageView
         android:id="@+id/iv_main_set_position"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/set_marker"
+        android:layout_alignBottom="@+id/map_main"
         android:layout_alignLeft="@+id/map_main"
         android:layout_alignRight="@+id/map_main"
         android:layout_alignTop="@+id/map_main"
-        android:layout_alignBottom="@+id/map_main"
-        android:background="@android:color/transparent"
-        android:visibility="gone"
-        android:scaleType="center"
+        android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"/>
+        android:background="@android:color/transparent"
+        android:scaleType="center"
+        android:src="@drawable/set_marker"
+        android:visibility="gone" />
 
     <ng.latitude.support.ui.BottomInfo
+        android:id="@+id/binf_main"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:id="@+id/binf_main"
-        android:visibility="gone"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true"
+        android:visibility="gone" />
 
     <ng.latitude.support.ui.BottomButtons
-        android:visibility="gone"
-        android:layout_alignParentBottom="true"
         android:id="@+id/bbtn_main"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize" />
+        android:layout_height="?attr/actionBarSize"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone" />
 
 
 
