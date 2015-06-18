@@ -1,27 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/dialog_add_marker_rv"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_centerHorizontal="true"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true"
+    android:orientation="vertical"
     android:padding="@dimen/login_pop_horizontal_padding">
 
-    <EditText
-        android:id="@+id/dialog_add_marker_et_title"
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="@dimen/login_pop_items_margin"
-        android:ems="8"
-        android:hint="@string/dialog_add_marker_hint_name" />
+        android:layout_marginTop="@dimen/login_pop_items_margin">
 
-    <EditText
-        android:id="@+id/dialog_add_marker_et_snippet"
+        <EditText
+            android:id="@+id/dialog_add_marker_et_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/dialog_add_marker_hint_name"
+            android:inputType="text" />
+
+    </android.support.design.widget.TextInputLayout>
+
+
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/dialog_add_marker_et_title"
-        android:layout_marginTop="@dimen/login_pop_items_margin"
-        android:ems="8"
-        android:hint="@string/dialog_add_marker_hint_snippet" />
+        android:layout_marginTop="@dimen/login_pop_items_margin">
 
-</RelativeLayout>
+        <EditText
+            android:id="@+id/dialog_add_marker_et_snippet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/dialog_add_marker_hint_snippet"
+            android:inputType="text" />
+    </android.support.design.widget.TextInputLayout>
+
+</LinearLayout>

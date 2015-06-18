@@ -61,7 +61,11 @@ public class GsonRequest<T> extends Request<T> {
             Log.e("Get Json ", json);
 
             if(json.equals("")||json.equals("null"))
-                throw new IllegalArgumentException(Constants.ERROR_ACCOUNT_NOT_EXIST);
+                throw new IllegalArgumentException(HttpUtils.Errors.NO_RETURN);
+
+            if (json.equals("{\"state\":0}")) {
+                throw new IllegalArgumentException(HttpUtils.Errors.ACTION_FAILED);
+            }
 
             return Response.success(
                     gson.fromJson(json, clazz), HttpHeaderParser.parseCacheHeaders(response));
@@ -70,6 +74,8 @@ public class GsonRequest<T> extends Request<T> {
         } catch (JsonSyntaxException e) {
             return Response.error(new ParseError(e));
         } catch (IllegalArgumentException e){
+            return Response.error(new ParseError(e));
+        } catch (Exception e) {
             return Response.error(new ParseError(e));
         }
     }

@@ -1,10 +1,10 @@
 package ng.latitude.support.ui;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
+import android.app.DialogFragment;
 import android.content.DialogInterface;
-import android.view.LayoutInflater;
+import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.EditText;
 
@@ -14,32 +14,32 @@ import ng.latitude.support.conf.Latitude;
 /**
  * Created by Ng on 15/6/15.
  */
-public class AddMarketDialog {
+public class AddMarketDialog extends DialogFragment {
 
-    private Context context;
+    private static final String TITLE = "title";
+    private static final String SNIPPET = "snippet";
     private OnMarkerConfirmedListener onMarkerConfirmedListener;
-    private String title;
-    private String snippet;
 
-    public AddMarketDialog(Context context, OnMarkerConfirmedListener listener, String title, String snippet) {
-        this.context = context;
-        this.onMarkerConfirmedListener = listener;
-        this.title = title == null ? "" : title;
-        this.snippet = snippet == null ? "" : snippet;
+    public static AddMarketDialog newInstance(String title, String snippet) {
+        AddMarketDialog fragment = new AddMarketDialog();
+        Bundle args = new Bundle();
+        args.putString(TITLE, title == null ? "" : title);
+        args.putString(SNIPPET, snippet == null ? "" : snippet);
+        fragment.setArguments(args);
+        return fragment;
     }
 
-    public void show() {
-        View v = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.dialog_add_marker, null);
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+        View v = getActivity().getLayoutInflater().inflate(R.layout.dialog_add_marker, null);
         final EditText etTitle = (EditText) v.findViewById(R.id.dialog_add_marker_et_title);
         final EditText etSnippet = (EditText) v.findViewById(R.id.dialog_add_marker_et_snippet);
 
-        if (!title.isEmpty())
-            etTitle.setText(title);
+        etTitle.setText(getArguments().getString(TITLE));
+        etSnippet.setText(getArguments().getString(SNIPPET));
 
-        if (!snippet.isEmpty())
-            etSnippet.setText(snippet);
-
-        final AlertDialog d = new AlertDialog.Builder(context)
+        final AlertDialog d = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.dialog_add_marker_title)
                 .setPositiveButton(android.R.string.ok, null)
                 .setNegativeButton(android.R.string.cancel, null)
@@ -66,8 +66,11 @@ public class AddMarketDialog {
             }
         });
 
+        return d;
+    }
 
-        d.show();
+    public void setOnMarkerConfirmedListener(OnMarkerConfirmedListener onMarkerConfirmedListener) {
+        this.onMarkerConfirmedListener = onMarkerConfirmedListener;
     }
 
     public interface OnMarkerConfirmedListener {

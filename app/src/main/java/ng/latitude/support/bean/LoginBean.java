@@ -1,5 +1,9 @@
 package ng.latitude.support.bean;
 
+import com.google.gson.annotations.SerializedName;
+
+import ng.latitude.support.network.HttpUtils;
+
 /**
  * Created by Ng on 15/5/31.
  */
@@ -10,14 +14,24 @@ public class LoginBean {
     private String name;
     private String account;
     private String password;
-    private int group;
+    @SerializedName(HttpUtils.Params.FORCE)
+    private int force;
+    private int state;
 
-    public int getGroup() {
-        return group;
+    public int getState() {
+        return state;
     }
 
-    public void setGroup(int group) {
-        this.group = group;
+    public void setState(int state) {
+        this.state = state;
+    }
+
+    public int getForce() {
+        return force;
+    }
+
+    public void setForce(int force) {
+        this.force = force;
     }
 
     public int getId() {

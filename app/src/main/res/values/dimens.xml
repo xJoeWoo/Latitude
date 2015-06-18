@@ -5,20 +5,26 @@
 
     <dimen name="bg_login_pop_corner_radius">4dp</dimen>
     <dimen name="bg_login_pop_btn_corner_radius">2dp</dimen>
-    <dimen name="login_pop_items_margin">16dp</dimen>
+    <dimen name="login_pop_items_margin">8dp</dimen>
     <dimen name="login_pop_horizontal_padding">16dp</dimen>
     <dimen name="login_pop_vertical_padding">48dp</dimen>
     <dimen name="btn_text_size">18sp</dimen>
     <dimen name="et_text_size">20sp</dimen>
     <dimen name="tv_text_size_main">22sp</dimen>
     <dimen name="tv_text_size_sub">15sp</dimen>
-    <dimen name="rb_text_size">25sp</dimen>
 
-    <dimen name="rb_dialog_width">124dp</dimen>
+    <dimen name="rb_dialog_text_size">30sp</dimen>
+    <dimen name="rb_dialog_width">156dp</dimen>
+
+    <dimen name="tv_spot_action_dialog_title">30sp</dimen>
+    <dimen name="tv_spot_action_dialog_snippet">25sp</dimen>
+    <dimen name="btn_spot_action_dialog_capture">35sp</dimen>
 
     <dimen name="info_window_title_text_size">20sp</dimen>
     <dimen name="info_window_snippet_text_size">15sp</dimen>
     <dimen name="info_window_margin_top">4dp</dimen>
+
+    <dimen name="snack_bar_margin_bottom">128dp</dimen>
 
     <!-- Per the design guidelines, navigation drawers should be between 240dp and 320dp:
          https://developer.android.com/design/patterns/navigation-drawer.html -->

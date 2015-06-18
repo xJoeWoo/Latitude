@@ -4,18 +4,17 @@
     android:layout_height="match_parent">
 
     <android.support.v7.widget.Toolbar
-        android:id="@+id/tb_map"
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:layout_alignParentTop="true"
         android:background="?attr/colorPrimary"/>
 
-
     <com.amap.api.maps.MapView
         android:id="@+id/map_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/tb_map" />
+        android:layout_below="@+id/toolbar" />
 
 
     <ImageView
@@ -47,6 +46,12 @@
         android:layout_alignParentBottom="true"
         android:visibility="gone" />
 
+    <android.support.design.widget.CoordinatorLayout
+        android:id="@+id/snb_main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"></android.support.design.widget.CoordinatorLayout>
 
 
 </RelativeLayout>

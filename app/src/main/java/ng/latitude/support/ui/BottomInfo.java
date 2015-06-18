@@ -1,12 +1,16 @@
 package ng.latitude.support.ui;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import ng.latitude.R;
@@ -15,7 +19,7 @@ import ng.latitude.support.conf.Constants;
 /**
  * Created by Ng on 15/6/3.
  */
-public class BottomInfo extends BottomButtons {
+public class BottomInfo extends RelativeLayout {
 
     private TextView main;
     private TextView sub;
@@ -44,23 +48,54 @@ public class BottomInfo extends BottomButtons {
         super(context, attrs, defStyleAttr);
     }
 
-    @Override
     public void show() {
         if (!state) {
             state = true;
-            super.show();
+            startAnim(true);
             startBlink();
 
         }
     }
 
-    @Override
     public void hide() {
         if (state) {
             state = false;
-            super.hide();
+            startAnim(false);
             stopBlink();
         }
+    }
+
+    private void startAnim(final boolean visible) {
+
+        final int height = getHeight();
+
+        PropertyValuesHolder alpha = PropertyValuesHolder.ofFloat("a", visible ? 0f : 1f, visible ? 1f : 0f);
+        PropertyValuesHolder translation = PropertyValuesHolder.ofFloat("y", visible ? height : 0f, visible ? 0f : height);
+
+        ValueAnimator oa = ObjectAnimator.ofPropertyValuesHolder(alpha, translation).setDuration(Constants.ANIM_COMMON_DURATION);
+
+        oa.setInterpolator(new GravityInterpolator(visible));
+        oa.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                setAlpha((float) animation.getAnimatedValue("a"));
+                setTranslationY((float) animation.getAnimatedValue("y"));
+            }
+        });
+        oa.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                if (visible)
+                    setVisibility(VISIBLE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (!visible)
+                    setVisibility(GONE);
+            }
+        });
+        oa.start();
     }
 
     public void startBlink() {

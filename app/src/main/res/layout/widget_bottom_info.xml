@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:layout_below="@+id/widget_bottom_info_shadow"
-        android:background="@android:color/white">
+        android:background="#aaffffff">
 
         <TextView
             android:id="@+id/widget_bottom_info_main"

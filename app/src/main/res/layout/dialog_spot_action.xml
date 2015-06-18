@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/dialog_spot_action_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="16dp"
+        android:text="asdfadsf"
+        android:textColor="@color/material_text_color_primary"
+        android:textSize="@dimen/tv_spot_action_dialog_title" />
+
+    <TextView
+        android:id="@+id/dialog_spot_action_snippet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/dialog_spot_action_title"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="16dp"
+        android:text="无信息"
+        android:textSize="@dimen/tv_spot_action_dialog_snippet" />
+
+
+    <Button
+        android:id="@+id/dialog_spot_action_capture"
+        android:layout_width="@dimen/rb_dialog_width"
+        android:layout_height="@dimen/rb_dialog_width"
+        android:layout_below="@id/dialog_spot_action_snippet"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/bg_dialog_spot_action_capture_force_1"
+        android:text="@string/dialog_spot_action_capture"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/btn_spot_action_dialog_capture"
+        android:textStyle="italic" />
+
+
+</RelativeLayout>

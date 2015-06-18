@@ -1,11 +1,12 @@
 package ng.latitude.support.ui;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
+import android.app.DialogFragment;
 import android.content.DialogInterface;
-import android.view.LayoutInflater;
+import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
@@ -15,21 +16,43 @@ import ng.latitude.support.conf.Constants;
 /**
  * Created by Ng on 15/6/15.
  */
-public class SelectForceDialog {
+public class SelectForceDialog extends DialogFragment {
 
-    private Context context;
     private OnForceSelectedListener OnForceSelectedListener;
 
-    public SelectForceDialog(Context context, OnForceSelectedListener OnForceSelectedListener) {
-        this.context = context;
-        this.OnForceSelectedListener = OnForceSelectedListener;
+    public static SelectForceDialog newInstance() {
+        return new SelectForceDialog();
     }
 
-    public void show() {
-        View v = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.dialog_select_force, null);
+    public void setOnForceSelectedListener(SelectForceDialog.OnForceSelectedListener onForceSelectedListener) {
+        OnForceSelectedListener = onForceSelectedListener;
+    }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        View v = getActivity().getLayoutInflater().inflate(R.layout.dialog_select_force, null);
         final RadioGroup rp = (RadioGroup) v.findViewById(R.id.dialog_select_force_rg);
 
-        final AlertDialog d = new AlertDialog.Builder(context)
+        final RadioButton rb1 = (RadioButton) v.findViewById(R.id.dialog_select_force_rb_1);
+        final RadioButton rb2 = (RadioButton) v.findViewById(R.id.dialog_select_force_rb_2);
+
+        rp.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.dialog_select_force_rb_1:
+                        rb1.setShadowLayer(25, 0, 0, getResources().getColor(android.R.color.white));
+                        rb2.setShadowLayer(0, 0, 0, 0);
+                        break;
+                    case R.id.dialog_select_force_rb_2:
+                        rb2.setShadowLayer(25, 0, 0, getResources().getColor(android.R.color.white));
+                        rb1.setShadowLayer(0, 0, 0, 0);
+                        break;
+                }
+            }
+        });
+
+        final AlertDialog d = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.dialog_select_force_title)
                 .setPositiveButton(android.R.string.ok, null)
                 .setNegativeButton(android.R.string.cancel, null)
@@ -46,10 +69,10 @@ public class SelectForceDialog {
 
                         switch (rp.getCheckedRadioButtonId()) {
                             case R.id.dialog_select_force_rb_1:
-                                force = Constants.FORCE_1;
+                                force = Constants.Force.ONE;
                                 break;
                             case R.id.dialog_select_force_rb_2:
-                                force = Constants.FORCE_2;
+                                force = Constants.Force.TWO;
                                 break;
                         }
 
@@ -61,15 +84,16 @@ public class SelectForceDialog {
                             d.dismiss();
 
                         } else {
-                            Toast.makeText(context, R.string.dialog_select_force_select, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), R.string.dialog_select_force_select, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
             }
         });
 
-        d.show();
+        return d;
     }
+
 
     public interface OnForceSelectedListener {
         void onForceSelected(int force);

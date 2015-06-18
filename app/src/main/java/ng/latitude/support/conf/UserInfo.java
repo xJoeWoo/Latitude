@@ -19,7 +19,7 @@ public class UserInfo {
         userInfo.account = bean.getAccount();
         userInfo.token = bean.getToken();
         userInfo.name = bean.getName() == null ? "" : bean.getName();
-        userInfo.force = bean.getGroup();
+        userInfo.force = bean.getForce();
         return userInfo;
     }
 

@@ -16,7 +16,10 @@
     </item>
 
     <item>
-        <color android:color="@color/force_1_extra_light" />
+        <shape>
+            <corners android:radius="@dimen/bg_login_pop_corner_radius" />
+            <solid android:color="@color/force_1_extra_light" />
+        </shape>
     </item>
 
 </selector>

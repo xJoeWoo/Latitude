@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">Latitude</string>
+    <string name="app_name">WeMore</string>
+    <string name="title_activity_main">WeMore</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_edit">修改</string>
@@ -17,8 +18,12 @@
     <string name="toast_logon_failed">注册失败，请重试</string>
     <string name="toast_logon_succeed">已注册，登录中</string>
     <string name="toast_network_error">网络错误，请重试</string>
-
-    <string name="title_activity_main">经纬</string>
+    <string name="toast_spot_create_failed">建建失败，请重试</string>
+    <string name="toast_spot_over_limit">你创建点据点已达到3个上限</string>
+    <string name="toast_move_to_range">请移动以进入占领范围</string>
+    <string name="toast_spot_loaded">已扫描周边据点</string>
+    <string name="toast_spot_capture_failed">占领失败，请重试</string>
+    <string name="toast_spot_capture_succeed">已占领！</string>
 
     <string name="widget_bottom_info_main">定位中…</string>
     <string name="widget_bottom_info_main_gps">精确定位中…</string>
@@ -26,7 +31,10 @@
     <string name="widget_bottom_info_sub">请确保处在空旷地方</string>
     <string name="widget_bottom_info_sub_gps_not_available">注意：GPS未开启</string>
 
-    <string name="dialog_remove_marker_message">移除标记？</string>
+    <string name="dialog_spot_action_capture">占领！</string>
+    <string name="dialog_spot_action_title">据点信息</string>
+    <string name="dialog_spot_action_capturing">占领中…</string>
+
 
     <string name="dialog_confirm_logon_title">账号不存在</string>
     <string name="dialog_confirm_logon_message">是否创建账号？</string>

@@ -7,7 +7,10 @@ import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -18,7 +21,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -32,6 +34,7 @@ import ng.latitude.support.bean.LoginBean;
 import ng.latitude.support.bean.LogonBean;
 import ng.latitude.support.conf.Constants;
 import ng.latitude.support.conf.Latitude;
+import ng.latitude.support.conf.PreferenceUtils;
 import ng.latitude.support.network.GsonRequest;
 import ng.latitude.support.network.HttpUtils;
 import ng.latitude.support.ui.GravityInterpolator;
@@ -48,6 +51,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText etPassword;
     private EditText etName;
     private EditText etPasswordConfirm;
+    private CoordinatorLayout snackbarLayout;
 
     private ObjectAnimator oaBtn;
     private float oaBtnValue;
@@ -60,13 +64,15 @@ public class LoginActivity extends AppCompatActivity {
         findViews();
         setListeners();
 
-
         if (DEBUG) {
             etAccount.setText("ng");
             etPassword.setText("233");
-            btnLogin.performClick();
+//            btnLogin.performClick();
         }
 
+        etAccount.setText(PreferenceUtils.getString(PreferenceUtils.KEY_ACCOUNT));
+
+        ((TextView) findViewById(R.id.login_pop_logo)).setTypeface(Typeface.createFromAsset(getAssets(), "Roboto-LightItalic.ttf"));
     }
 
     private void findViews() {
@@ -76,6 +82,7 @@ public class LoginActivity extends AppCompatActivity {
         etPassword = (EditText) findViewById(R.id.et_login_password);
         etPasswordConfirm = (EditText) findViewById(R.id.et_login_password_confirm);
         etName = (EditText) findViewById(R.id.et_login_name);
+        snackbarLayout = (CoordinatorLayout) findViewById(R.id.snb_login);
     }
 
     private void setListeners() {
@@ -127,9 +134,9 @@ public class LoginActivity extends AppCompatActivity {
             public void onResponse(LoginBean response) {
                 setButtonStatus(true);
                 Latitude.initUserInfo(response);
+                PreferenceUtils.savePreference(PreferenceUtils.KEY_ACCOUNT, etAccount.getText().toString().trim());
                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
                 finish();
-
             }
         }, new Response.ErrorListener() {
             @Override
@@ -137,7 +144,7 @@ public class LoginActivity extends AppCompatActivity {
                 setButtonStatus(true);
                 error.printStackTrace();
                 Log.e("message", error.getLocalizedMessage());
-                if (error.getMessage().contains(Constants.ERROR_ACCOUNT_NOT_EXIST)) {
+                if (error.getMessage().contains(HttpUtils.Errors.ACTION_FAILED)) {
                     new AlertDialog.Builder(LoginActivity.this).setTitle(R.string.dialog_confirm_logon_title).setMessage(R.string.dialog_confirm_logon_message).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -145,7 +152,8 @@ public class LoginActivity extends AppCompatActivity {
                         }
                     }).setNegativeButton(android.R.string.cancel, null).show();
                 } else {
-                    Toast.makeText(LoginActivity.this, R.string.toast_network_error, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(LoginActivity.this, R.string.toast_network_error, Toast.LENGTH_SHORT).show();
+                    Snackbar.make(snackbarLayout, R.string.toast_network_error, Snackbar.LENGTH_LONG).show();
                 }
             }
         }));
@@ -155,19 +163,22 @@ public class LoginActivity extends AppCompatActivity {
 
         if (etPasswordConfirm.getVisibility() == View.VISIBLE) { // 展开后
 
-            new SelectForceDialog(this, new SelectForceDialog.OnForceSelectedListener() {
+            SelectForceDialog dialog = SelectForceDialog.newInstance();
+
+            dialog.setOnForceSelectedListener(new SelectForceDialog.OnForceSelectedListener() {
                 @Override
                 public void onForceSelected(int force) {
-
                     setButtonStatus(btnLogon, false);
 
                     Map<String, String> params = getInput();
-                    params.put(Constants.PARAM_FORCE, String.valueOf(force));
+                    params.put(HttpUtils.Params.FORCE, String.valueOf(force));
 
                     HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, Constants.URL_LOGON, params, LogonBean.class, new Response.Listener<LogonBean>() {
                         @Override
                         public void onResponse(LogonBean response) {
-                            Toast.makeText(LoginActivity.this, R.string.toast_logon_succeed, Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(LoginActivity.this, R.string.toast_logon_succeed, Toast.LENGTH_SHORT).show();
+                            Snackbar.make(snackbarLayout, R.string.toast_logon_succeed, Snackbar.LENGTH_LONG).show();
+
                             setButtonStatus(true);
                             requestLogin();
                         }
@@ -176,12 +187,13 @@ public class LoginActivity extends AppCompatActivity {
                         public void onErrorResponse(VolleyError error) {
                             setButtonStatus(true);
                             error.printStackTrace();
-                            Toast.makeText(LoginActivity.this, R.string.toast_logon_failed, Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(LoginActivity.this, R.string.toast_logon_failed, Toast.LENGTH_SHORT).show();
+                            Snackbar.make(snackbarLayout, R.string.toast_logon_failed, Snackbar.LENGTH_LONG).show();
                         }
                     }));
-
                 }
-            }).show();
+            });
+            dialog.show(getFragmentManager(), "SelectForceDialog");
 
         } else { // 未展开
 
@@ -192,11 +204,12 @@ public class LoginActivity extends AppCompatActivity {
             final int paddingBottom = getResources().getDimensionPixelSize(R.dimen.login_pop_horizontal_padding);
 
             final int oriHeight = container.getMeasuredHeight();
-            final int targetHeight = oriHeight + etPassword.getHeight() * 2 + paddingBottom * 2;
+            final int targetHeight = oriHeight + findViewById(R.id.login_pop_til_account).getHeight() * 2 + paddingBottom * 2;
 
             final int oriBtnWidth = btnLogon.getWidth();
-            final int targetBtnWidth = etAccount.getWidth();
-            RelativeLayout.LayoutParams btnLayoutParams = (RelativeLayout.LayoutParams) btnLogon.getLayoutParams();
+            final int targetBtnWidth = findViewById(R.id.login_pop_til_account).getWidth();
+            final int buttonsContainerHeight = buttonsContainer.getHeight();
+            final RelativeLayout.LayoutParams btnLayoutParams = (RelativeLayout.LayoutParams) btnLogon.getLayoutParams();
             btnLayoutParams.addRule(RelativeLayout.RIGHT_OF, 0);
             btnLogon.setLayoutParams(btnLayoutParams);
 
@@ -211,9 +224,16 @@ public class LoginActivity extends AppCompatActivity {
                     containerLayoutParams.height = (int) (oriHeight + value);
                     container.setLayoutParams(containerLayoutParams);
 
-                    buttonsContainer.setY(containerLayoutParams.height - buttonsContainer.getMeasuredHeight() - paddingBottom);
+//                    Log.e("TAG ------", String.valueOf((int) (oriHeight + value)));
+//                    Log.e("TAG", String.valueOf((int) (containerLayoutParams.height - buttonsContainer.getHeight() - paddingBottom)));
+                    Log.e("TAG", String.format("%f %f", btnLogon.getX(), btnLogon.getY()));
+
+
+                    buttonsContainer.setY(containerLayoutParams.height - buttonsContainerHeight - paddingBottom);
+//                    buttonsContainer.setY((int) (oriHeight + (float) animation.getAnimatedValue() * 100));
 
                     btnLogon.setWidth((int) (oriBtnWidth + (targetBtnWidth - oriBtnWidth) * (float) animation.getAnimatedValue()));
+                    btnLogin.setAlpha(1 - (float) animation.getAnimatedValue());
 
                 }
             });
@@ -244,10 +264,10 @@ public class LoginActivity extends AppCompatActivity {
 
     private Map<String, String> getInput() {
         HashMap<String, String> map = new HashMap<>();
-        map.put(Constants.PARAM_ACCOUNT, etAccount.getText().toString());
-        map.put(Constants.PARAM_PASSWORD, etPassword.getText().toString());
-        if (etName.getText().toString().trim().isEmpty())
-            map.put(Constants.PARAM_NAME, etPassword.getText().toString());
+        map.put(HttpUtils.Params.ACCOUNT, etAccount.getText().toString().trim());
+        map.put(HttpUtils.Params.PASSWORD, etPassword.getText().toString());
+        if (!etName.getText().toString().trim().isEmpty())
+            map.put(HttpUtils.Params.NAME, etName.getText().toString().trim());
 
         return map;
     }

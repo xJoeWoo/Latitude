@@ -7,6 +7,12 @@ public class SetSpotBean {
 
     private int state;
 
+
+    /**
+     * 1 成功，2 失败，0 超过3个点
+     *
+     * @return 状态
+     */
     public int getState() {
         return state;
     }

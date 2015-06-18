@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <meta-data
+            android:name="com.amap.api.v2.apikey"
+            android:value="8e8b80bbe4a7bc35025cbf9b947c3b6e" />
+    </application>
+</manifest>
