@@ -3,6 +3,7 @@ package ng.latitude.support.map;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.amap.api.maps.AMap;
@@ -40,9 +41,15 @@ public class InfoWindowAdapter implements AMap.InfoWindowAdapter {
     }
 
     private void render(final Marker marker, View view) {
+
+        final SpotBean spotBean = (SpotBean) marker.getObject();
+
         TextView tvTitle = (TextView) view.findViewById(R.id.widget_marker_info_window_title);
         TextView tvSnippet = (TextView) view.findViewById(R.id.widget_marker_info_window_snippet);
         Button btnCapture = (Button) view.findViewById(R.id.widget_marker_info_window_capture);
+        RelativeLayout container = (RelativeLayout) view.findViewById(R.id.widget_marker_info_window_container);
+
+        container.setBackgroundResource(spotBean.getForce() == Constants.Force.ONE ? R.drawable.marker_info_window_force_1 : R.drawable.marker_info_window_force_2);
 
         btnCapture.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,7 +73,7 @@ public class InfoWindowAdapter implements AMap.InfoWindowAdapter {
                 tvSnippet.setText(marker.getSnippet());
         }
 
-        if (((SpotBean) marker.getObject()).getForce() == Latitude.getUserInfo().getForce())
+        if (spotBean.getForce() == Latitude.getUserInfo().getForce())
             btnCapture.setVisibility(View.GONE);
         else {
             btnCapture.setBackgroundResource(Latitude.getUserInfo().getForce() == Constants.Force.ONE ? R.drawable.bg_dialog_spot_action_capture_force_1 : R.drawable.bg_dialog_spot_action_capture_force_2);

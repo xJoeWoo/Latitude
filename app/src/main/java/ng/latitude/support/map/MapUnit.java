@@ -25,6 +25,8 @@ import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.CameraPosition;
+import com.amap.api.maps.model.Circle;
+import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
@@ -67,12 +69,14 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
     private OnMarkerLoadListener onMarkerLoadListener;
     private OnSpotForceChangedListener onSpotForceChangedListener;
     private SensorUnit sensorUnit;
+    private LatLng lastFix = new LatLng(0d, 0d);
     //    private SpotBean[] spotBeans;
     //    private HashMap<String, Integer> markerIdToPositionOfSpotBeans = new HashMap<>();
     private float lastZoom = 99;
     private int heading;
     private int headingGap;
     private Marker currentMarker;
+    private Circle myLocationCircle;
     private boolean isLoadingMarkers = false;
     private boolean isRanBefore = false;
 
@@ -82,19 +86,20 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
             if (onLocationFixListener != null)
                 onLocationFixListener.gpsStatus(isGPSEnabled());
 
-            if (onLocationChangedListener != null && aLocation != null && aLocation.hasAccuracy()) {
+            LatLng currentFix = new LatLng(aLocation.getLatitude(), aLocation.getLongitude());
 
-                String provider = aLocation.getProvider();
-//
+            if (onLocationChangedListener != null && aLocation.hasAccuracy()
+                    && AMapUtils.calculateLineDistance(lastFix, currentFix) >= Constants.LOCATION_UPDATE_ACCURATE) {
+
+                lastFix = currentFix;
+                final String provider = aLocation.getProvider();
+
                 if (provider.equals(Constants.LOCATION_PROVIDER_GPS)) {// GPS定位
                     if (onLocationFixListener != null)
                         onLocationFixListener.gpsFixedLocation();
-//
                 } else if (provider.equals(Constants.LOCATION_PROVIDER_LBS)) {// 网络定位
-//
                     if (onLocationFixListener != null)
                         onLocationFixListener.lbsFixedLocation();
-//
                 }
 
 //            aLocation.setBearing(Math.abs(heading - 90) % 360); // 总之要减90
@@ -105,12 +110,18 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
                 Log.e("onLocationChanged", String.format("%s: %f %f\tbearing: %f", aLocation.getProvider(), aLocation.getLatitude(), aLocation.getLongitude(), aLocation.getBearing()));
 
+                if (myLocationCircle != null) {
+                    myLocationCircle.setCenter(currentFix);
+                } else {
+                    myLocationCircle = aMap.addCircle(new CircleOptions().center(currentFix).radius(1.5d).fillColor(fragment.getResources().getColor(R.color.green_primary)).zIndex(999).strokeWidth(0f));
+                }
+
                 onLocationChangedListener.onLocationChanged(aLocation);// 显示系统小蓝点
 //            aMap.setMyLocationRotateAngle(heading);// 设置小蓝点旋转角度
 
                 if (!isRanBefore) {
                     isRanBefore = true;
-                    PreferenceUtils.savePreference(PreferenceUtils.KEY_RAN_BEFORE, isRanBefore);
+                    PreferenceUtils.savePreference(PreferenceUtils.KEY_RAN_BEFORE, true);
                     aMap.moveCamera(CameraUpdateFactory.zoomTo(Constants.MAP_INIT_ZOOM_LEVEL));
                 }
 
@@ -189,7 +200,7 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                         aMap.moveCamera(CameraUpdateFactory.newLatLngBounds(initBounds, 0));
                         aMap.moveCamera(CameraUpdateFactory.zoomTo(Constants.MAP_INIT_ZOOM_LEVEL));
                     }
-                    aMap.moveCamera(CameraUpdateFactory.changeTilt(Constants.MAP_INIT_TILT));
+//                    aMap.moveCamera(CameraUpdateFactory.changeTilt(Constants.MAP_INIT_TILT));
                 }
             });
 
@@ -236,6 +247,8 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                     ////            loadMarkers();
                     //            lastZoom = cameraPosition.zoom;
                     //        }
+
+                    aMap.moveCamera(CameraUpdateFactory.changeTilt(Constants.MAP_INIT_TILT));
                 }
             });
 
@@ -249,7 +262,7 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
 
             MyLocationStyle myLocationStyle = new MyLocationStyle();
-            myLocationStyle.myLocationIcon(BitmapDescriptorFactory.fromResource(R.drawable.point));// 设置小蓝点的图标
+            myLocationStyle.myLocationIcon(BitmapDescriptorFactory.fromResource(R.drawable.transperant));// 设置小蓝点的图标
             // myLocationStyle.anchor(int,int)//设置小蓝点的锚点
             myLocationStyle.radiusFillColor(this.fragment.getResources().getColor(R.color.location_green_primary));// 设置圆形的填充颜色
             myLocationStyle.strokeColor(this.fragment.getResources().getColor(R.color.location_green_primary_light));// 设置圆形的边框颜色
@@ -472,7 +485,7 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
              * ，第一个参数是定位provider，第二个参数时间最短是2000毫秒，第三个参数距离间隔单位是米，第四个参数是定位监听者
 			 */
             locationManagerProxy.requestLocationData(
-                    LocationProviderProxy.AMapNetwork, 5000, 10, aMapLocationListener);
+                    LocationProviderProxy.AMapNetwork, Constants.LOCATION_UPDATE_INTERVAL, Constants.LOCATION_UPDATE_ACCURATE, aMapLocationListener);
 
             if (onLocationFixListener != null)
                 onLocationFixListener.startFixLocation();
@@ -525,11 +538,11 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
     @Override
     public void onInfoWindowButtonClicked(Marker marker) {
         if (onCaptureButtonClickedListener != null) {
-            if (AMapUtils.calculateLineDistance(marker.getPosition(), new LatLng(aMap.getMyLocation().getLatitude(), aMap.getMyLocation().getLongitude())) <= Constants.GAMING_CAPTURE_RANGE) {
-                onCaptureButtonClickedListener.onCaptureButtonClicked(true, marker);
-            } else {
-                onCaptureButtonClickedListener.onCaptureButtonClicked(false, marker);
-            }
+//            if (AMapUtils.calculateLineDistance(marker.getPosition(), new LatLng(aMap.getMyLocation().getLatitude(), aMap.getMyLocation().getLongitude())) <= Constants.GAMING_CAPTURE_RANGE) {
+            onCaptureButtonClickedListener.onCaptureButtonClicked(true, marker);
+//            } else {
+//                onCaptureButtonClickedListener.onCaptureButtonClicked(false, marker);
+//            }
         }
     }
 

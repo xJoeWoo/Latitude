@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -205,29 +206,33 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     @Override
     public void startFixLocation() {
         bInf.show();
+        Log.e("TAG", String.valueOf("startFix"));
     }
 
     @Override
     public void stopFixLocation() {
         bInf.hide();
+        Log.e("TAG", String.valueOf("stopFix"));
     }
 
     @Override
     public void lbsFixedLocation() {
         bInf.show();
         bInf.setMainText(R.string.widget_bottom_info_main_gps);
+        Log.e("TAG", String.valueOf("lbsFixed"));
     }
 
     @Override
     public void gpsFixedLocation() {
         bInf.hide();
         bInf.reset();
+        Log.e("TAG", String.valueOf("gpsFixed"));
     }
 
     @Override
     public void gpsStatus(boolean status) {
         if (status)
-            bInf.reset();
+            bInf.setSubText(R.string.widget_bottom_info_sub);
         else
             bInf.setSubText(R.string.widget_bottom_info_sub_gps_not_available);
     }
@@ -374,7 +379,7 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
             case 1:
 //                mapUtils.changeSpotForce(spotId, Latitude.getUserInfo().getForce());
                 Snackbar.make(snackBarLayout, R.string.toast_spot_capture_succeed, Snackbar.LENGTH_LONG).show();
-//                updateScore(scoreView);
+                updateScore(scoreView);
                 break;
             case 0:
                 Snackbar.make(snackBarLayout, R.string.toast_spot_capture_failed, Snackbar.LENGTH_SHORT).show();

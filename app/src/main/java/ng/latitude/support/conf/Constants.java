@@ -6,7 +6,6 @@ package ng.latitude.support.conf;
 public class Constants {
 
 
-
     public static final int NETWORK_TIMEOUT = 8 * 1000;
     public static final int NETWORK_MAX_RETRIES = 2;
 
@@ -20,8 +19,8 @@ public class Constants {
     public static final String OBJECT_ANIM_TRANSLATION_Y = "translationY";
     public static final String OBJECT_ANIM_TRANSLATION_X = "translationX";
 
-    public static final int LOCATION_ACCURATE = 10;
-    public static final int LOCATION_UPDATE_INTERVAL = 3000;
+    public static final int LOCATION_UPDATE_ACCURATE = 2;
+    public static final int LOCATION_UPDATE_INTERVAL = 5 * 1000;
 
     public static final float MAP_INIT_ZOOM_LEVEL = 14f;
     public static final float MAP_INIT_TILT = 45f;
