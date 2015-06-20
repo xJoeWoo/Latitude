@@ -6,10 +6,10 @@ import android.animation.ObjectAnimator;
 import android.app.Fragment;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,14 +19,23 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.amap.api.maps.model.Marker;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+
+import java.util.HashMap;
 
 import ng.latitude.R;
+import ng.latitude.support.bean.GetScoreBean;
 import ng.latitude.support.conf.Constants;
 import ng.latitude.support.conf.Latitude;
 import ng.latitude.support.map.MapUnit;
+import ng.latitude.support.network.GsonRequest;
+import ng.latitude.support.network.HttpUtils;
 import ng.latitude.support.ui.BottomButtons;
 import ng.latitude.support.ui.BottomInfo;
 import ng.latitude.support.ui.GravityInterpolator;
+import ng.latitude.support.ui.ScoreView;
 import ng.latitude.support.ui.SingleFragmentActivity;
 
 /**
@@ -37,14 +46,31 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
         , MapUnit.OnCaptureButtonClickedListener, MapUnit.OnMarkerLoadListener, MapUnit.OnSpotForceChangedListener {
 
 
+    private final Handler handler = new Handler();
     private SingleFragmentActivity activity;
     private View rootView;
     private ImageView ivSetPosition;
     private BottomButtons bBtn;
     private BottomInfo bInf;
     private MapUnit mapUtils;
+    private ScoreView scoreView;
     private SingleFragmentActivity.BackStatus currentBackStatus = SingleFragmentActivity.BackStatus.Normal;
     private CoordinatorLayout snackBarLayout;
+    private Runnable refreshSpotsRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mapUtils.loadMarkers();
+            handler.postDelayed(this, Constants.REFRESH_SPOTS_INTERVAL);
+        }
+    };
+    private boolean isUpdatingScore = false;
+    private Runnable refreshScoreRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateScore(scoreView);
+            handler.postDelayed(this, Constants.REFRESH_SCORE_INTERVAL);
+        }
+    };
 
     public static MapFragment newInstance() {
         return new MapFragment();
@@ -66,6 +92,8 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
         Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
         toolbar.setTitleTextColor(getResources().getColor(android.R.color.white));
 
+        scoreView = new ScoreView(toolbar);
+
         activity = (SingleFragmentActivity) getActivity();
         activity.setSupportActionBar(toolbar);
 
@@ -75,6 +103,7 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
         mapUtils = new MapUnit(this, rootView.findViewById(R.id.map_main));
         mapUtils.onCreate(savedInstanceState);
         setListeners();
@@ -85,6 +114,7 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
         activity.getSupportActionBar().setBackgroundDrawable(new ColorDrawable(activity.getResources()
                 .getColor(Latitude.getUserInfo().getForce() == Constants.Force.ONE ? R.color.force_1 : R.color.force_2)));
 
+        scoreView.updateScore(); // 先显示登录时的分数
     }
 
     private void findViews(View v) {
@@ -114,10 +144,40 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
         mapUtils.setOnSpotForceChangedListener(this);
     }
 
+    private void updateScore(final ScoreView scoreView) {
+
+        if (!isUpdatingScore) {
+            isUpdatingScore = true;
+
+            HashMap<String, String> params = new HashMap<>();
+            params.put(HttpUtils.Params.USER_ID, String.valueOf(Latitude.getUserInfo().getId()));
+            params.put(HttpUtils.Params.FORCE, String.valueOf(Latitude.getUserInfo().getForce()));
+
+            HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.GET_SCORE, params, GetScoreBean.class, new Response.Listener<GetScoreBean>() {
+                @Override
+                public void onResponse(GetScoreBean response) {
+                    Latitude.getUserInfo().setPlayerScore(response.getPlayerScore());
+                    Latitude.getUserInfo().setForceScore(response.getForceScore());
+
+                    scoreView.updateScore();
+
+                    isUpdatingScore = false;
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    isUpdatingScore = false;
+                }
+            }));
+        }
+
+    }
+
 
     @Override
     public void onMarkerAdded() {
         setPosition(false);
+        mapUtils.loadMarkers();
     }
 
     @Override
@@ -187,10 +247,9 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     }
 
     private void startSetPositionAnim(final boolean visible) {
-
         float transY = rootView.findViewById(R.id.rv_main).getHeight() - ivSetPosition.getY();
-        ObjectAnimator oa = ObjectAnimator.ofFloat(ivSetPosition, Constants.OBJECT_ANIM_TRANSLATION_Y, visible ? transY : 0, visible ? 0 : 0).setDuration(Constants.ANIM_COMMON_DURATION);
-        oa.setInterpolator(new GravityInterpolator(visible));
+        final ObjectAnimator oa = ObjectAnimator.ofFloat(ivSetPosition, Constants.OBJECT_ANIM_TRANSLATION_Y, visible ? transY : 0, visible ? 0 : 0).setDuration(Constants.ANIM_COMMON_DURATION);
+        oa.setInterpolator(GravityInterpolator.getInstance(visible));
         oa.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
@@ -202,6 +261,7 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
             public void onAnimationEnd(Animator animation) {
                 if (!visible)
                     ivSetPosition.setVisibility(View.GONE);
+                oa.removeAllListeners();
             }
         });
         oa.start();
@@ -248,27 +308,29 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     public void onPause() {
         super.onPause();
         mapUtils.onPause();
-        Log.e("onPause", "");
+
+        handler.removeCallbacks(refreshScoreRunnable);
+        handler.removeCallbacks(refreshSpotsRunnable);
     }
 
     @Override
     public void onResume() {
         super.onResume();
         mapUtils.onResume();
-        Log.e("onResume", "");
+
+        handler.postDelayed(refreshScoreRunnable, Constants.REFRESH_SCORE_INTERVAL);
+        handler.post(refreshSpotsRunnable);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         mapUtils.onDestroy();
-        Log.e("onDestroy", "");
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        Log.e("onDestroyView", "");
 
     }
 
@@ -283,7 +345,6 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     public void onMarkerLoaded(boolean success) {
         if (success) {
             Snackbar.make(snackBarLayout, R.string.toast_spot_loaded, Snackbar.LENGTH_SHORT).show();
-
         } else {
 //            Snackbar.make(snackBarLayout, R.string.toast_network_error, Snackbar.LENGTH_SHORT).show();
         }
@@ -298,7 +359,7 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     @Override
     public void onCaptureButtonClicked(boolean inRange, Marker marker) {
         if (inRange) {
-//            SpotActionDialog.newInstance(spotBean).setOnSpotForceChangedListener(this).show(getFragmentManager(), "SpotActionDialog");
+//            SpotActionDialog.getInstance(spotBean).setOnSpotForceChangedListener(this).show(getFragmentManager(), "SpotActionDialog");
             mapUtils.changeSpotForce(marker, Latitude.getUserInfo().getForce());
         } else {
             Snackbar.make(snackBarLayout, R.string.toast_move_to_range, Snackbar.LENGTH_SHORT).show();
@@ -313,6 +374,7 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
             case 1:
 //                mapUtils.changeSpotForce(spotId, Latitude.getUserInfo().getForce());
                 Snackbar.make(snackBarLayout, R.string.toast_spot_capture_succeed, Snackbar.LENGTH_LONG).show();
+//                updateScore(scoreView);
                 break;
             case 0:
                 Snackbar.make(snackBarLayout, R.string.toast_spot_capture_failed, Snackbar.LENGTH_SHORT).show();
@@ -322,4 +384,5 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
                 break;
         }
     }
+
 }

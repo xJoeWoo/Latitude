@@ -47,6 +47,12 @@ public abstract class SingleFragmentActivity extends AppCompatActivity {
 
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        System.exit(0);
+    }
+
+    @Override
     public void onBackPressed() {
         if (backPressedListener != null)
             if (backPressedListener.onActivityBackPressed())

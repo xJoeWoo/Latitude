@@ -5,6 +5,24 @@
     android:background="@color/green_primary"
     tools:context=".Login">
 
+
+    <TextView
+        android:id="@+id/login_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:alpha="0"
+        android:text="@string/app_name"
+        android:textColor="@android:color/white"
+        android:textSize="65sp" />
+
+    <!--<io.codetail.widget.RevealLinearLayout-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_centerHorizontal="true"-->
+    <!--android:layout_centerVertical="true">-->
+
     <RelativeLayout
         android:id="@+id/login_pop_container"
         android:layout_width="wrap_content"
@@ -12,6 +30,8 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:layout_margin="8dp"
+        android:alpha="0"
+        android:animateLayoutChanges="true"
         android:background="@drawable/bg_login_pop"
         android:descendantFocusability="beforeDescendants"
         android:focusableInTouchMode="true"
@@ -162,6 +182,8 @@
         </RelativeLayout>
 
     </RelativeLayout>
+
+    <!--</io.codetail.widget.RevealLinearLayout>-->
 
     <android.support.design.widget.CoordinatorLayout
         android:id="@+id/snb_login"

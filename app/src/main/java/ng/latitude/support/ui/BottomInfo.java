@@ -72,9 +72,9 @@ public class BottomInfo extends RelativeLayout {
         PropertyValuesHolder alpha = PropertyValuesHolder.ofFloat("a", visible ? 0f : 1f, visible ? 1f : 0f);
         PropertyValuesHolder translation = PropertyValuesHolder.ofFloat("y", visible ? height : 0f, visible ? 0f : height);
 
-        ValueAnimator oa = ObjectAnimator.ofPropertyValuesHolder(alpha, translation).setDuration(Constants.ANIM_COMMON_DURATION);
+        final ValueAnimator oa = ObjectAnimator.ofPropertyValuesHolder(alpha, translation).setDuration(Constants.ANIM_COMMON_DURATION);
 
-        oa.setInterpolator(new GravityInterpolator(visible));
+        oa.setInterpolator(GravityInterpolator.getInstance(visible));
         oa.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -93,6 +93,8 @@ public class BottomInfo extends RelativeLayout {
             public void onAnimationEnd(Animator animation) {
                 if (!visible)
                     setVisibility(GONE);
+                oa.removeAllUpdateListeners();
+                oa.removeAllListeners();
             }
         });
         oa.start();
@@ -107,7 +109,7 @@ public class BottomInfo extends RelativeLayout {
     }
 
     public void stopBlink() {
-        oa.cancel();
+//        oa.cancel();
         main.setAlpha(1f);
     }
 

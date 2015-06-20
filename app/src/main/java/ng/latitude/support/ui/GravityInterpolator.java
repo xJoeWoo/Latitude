@@ -1,23 +1,19 @@
 package ng.latitude.support.ui;
 
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 
 /**
  * Created by Joe on 2015/5/26.
  */
-public class GravityInterpolator implements Interpolator {
+public class GravityInterpolator {
 
-    private boolean visible;
+    private static DecelerateInterpolator de = new DecelerateInterpolator();
+    private static AccelerateInterpolator ac = new AccelerateInterpolator();
 
-    public GravityInterpolator(boolean visible) {
-        this.visible = visible;
+    public static Interpolator getInstance(boolean visible) {
+        return visible ? de : ac;
     }
 
-    @Override
-    public float getInterpolation(float input) {
-        if (visible)
-            return (float) Math.sqrt(input);
-        else
-            return input * input;
-    }
 }

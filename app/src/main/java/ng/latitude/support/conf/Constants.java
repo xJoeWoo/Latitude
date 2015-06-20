@@ -5,12 +5,7 @@ package ng.latitude.support.conf;
  */
 public class Constants {
 
-    public static final String URL_LOGIN = "http://114.215.80.157/Home/Game/login";             // account | password
-    public static final String URL_LOGON = "http://114.215.80.157/Home/Game/register";          // account | password
-    public static final String URL_CHANGE_NAME = "http://114.215.80.157/Home/Game/name";             // name | token
-    public static final String URL_SET_SPOT = "http://114.215.80.157/Home/Game/setpoint";             // uid | title | snippet | latitude | longitude | force
-    public static final String URL_GET_SPOTS = "http://114.215.80.157/Home/Game/getpoint";             // 4 location
-    public static final String URL_CAPTURE_SPOT = "http://114.215.80.157/Home/Game/grabpoint";             // 4 location
+
 
     public static final int NETWORK_TIMEOUT = 8 * 1000;
     public static final int NETWORK_MAX_RETRIES = 2;
@@ -36,6 +31,15 @@ public class Constants {
 
     public static final int SENSOR_HEADING_UPDATE_LIMIT = 3;
     public static final float GAMING_CAPTURE_RANGE = 40f;
+
+    public static final int LOGIN_LOGO_DELAY_TIME = 350;
+    public static final int LOGIN_LOGO_ANIM_DURATION = 800;
+    public static final int LOGIN_POP_DELAY_TIME = 1300;
+    public static final int LOGIN_POP_ANIM_DURATION = 500;
+
+    public static final int REFRESH_SCORE_INTERVAL = 30 * 1000;
+    public static final int REFRESH_SPOTS_INTERVAL = REFRESH_SCORE_INTERVAL * 2;
+
 
     public interface Force {
         int ONE = 0;

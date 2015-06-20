@@ -17,6 +17,26 @@ public class LoginBean {
     @SerializedName(HttpUtils.Params.FORCE)
     private int force;
     private int state;
+    @SerializedName(HttpUtils.Params.SCORE_PLAYER)
+    private int playerScore;
+    @SerializedName(HttpUtils.Params.SCORE_FORCE)
+    private int forceScore;
+
+    public int getPlayerScore() {
+        return playerScore;
+    }
+
+    public void setPlayerScore(int playerScore) {
+        this.playerScore = playerScore;
+    }
+
+    public int getForceScore() {
+        return forceScore;
+    }
+
+    public void setForceScore(int forceScore) {
+        this.forceScore = forceScore;
+    }
 
     public int getState() {
         return state;

@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -52,6 +53,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText etName;
     private EditText etPasswordConfirm;
     private CoordinatorLayout snackbarLayout;
+    private RelativeLayout container;
 
     private ObjectAnimator oaBtn;
     private float oaBtnValue;
@@ -67,13 +69,40 @@ public class LoginActivity extends AppCompatActivity {
         if (DEBUG) {
             etAccount.setText("ng");
             etPassword.setText("233");
-//            btnLogin.performClick();
+            btnLogin.performClick();
         }
 
         etAccount.setText(PreferenceUtils.getString(PreferenceUtils.KEY_ACCOUNT));
 
-        ((TextView) findViewById(R.id.login_pop_logo)).setTypeface(Typeface.createFromAsset(getAssets(), "Roboto-LightItalic.ttf"));
+        Typeface typeface = Typeface.createFromAsset(getAssets(), "Roboto-LightItalic.ttf");
+
+        final TextView tvLogo = (TextView) findViewById(R.id.login_logo);
+        tvLogo.setTypeface(typeface);
+        ((TextView) findViewById(R.id.login_pop_logo)).setTypeface(typeface);
+
+        final Handler handler = new Handler();
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ObjectAnimator oa = ObjectAnimator.ofFloat(tvLogo, Constants.OBJECT_ANIM_ALPHA, 0f, 1f).setDuration(Constants.LOGIN_LOGO_ANIM_DURATION);
+                oa.setInterpolator(GravityInterpolator.getInstance(true));
+                oa.start();
+            }
+        }, Constants.LOGIN_LOGO_DELAY_TIME);
+
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ObjectAnimator oa = ObjectAnimator.ofFloat(container, Constants.OBJECT_ANIM_ALPHA, 0f, 1f).setDuration(Constants.LOGIN_POP_ANIM_DURATION);
+                oa.setInterpolator(GravityInterpolator.getInstance(true));
+                oa.start();
+            }
+        }, Constants.LOGIN_POP_DELAY_TIME);
+
     }
+
 
     private void findViews() {
         btnLogin = (Button) findViewById(R.id.btn_login);
@@ -83,6 +112,7 @@ public class LoginActivity extends AppCompatActivity {
         etPasswordConfirm = (EditText) findViewById(R.id.et_login_password_confirm);
         etName = (EditText) findViewById(R.id.et_login_name);
         snackbarLayout = (CoordinatorLayout) findViewById(R.id.snb_login);
+        container = (RelativeLayout) findViewById(R.id.login_pop_container);
     }
 
     private void setListeners() {
@@ -129,10 +159,10 @@ public class LoginActivity extends AppCompatActivity {
 
         setButtonStatus(btnLogin, false);
 
-        HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, Constants.URL_LOGIN, getInput(), LoginBean.class, new Response.Listener<LoginBean>() {
+        HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.LOGIN, getInput(), LoginBean.class, new Response.Listener<LoginBean>() {
             @Override
             public void onResponse(LoginBean response) {
-                setButtonStatus(true);
+//                setButtonStatus(true);
                 Latitude.initUserInfo(response);
                 PreferenceUtils.savePreference(PreferenceUtils.KEY_ACCOUNT, etAccount.getText().toString().trim());
                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
@@ -173,13 +203,11 @@ public class LoginActivity extends AppCompatActivity {
                     Map<String, String> params = getInput();
                     params.put(HttpUtils.Params.FORCE, String.valueOf(force));
 
-                    HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, Constants.URL_LOGON, params, LogonBean.class, new Response.Listener<LogonBean>() {
+                    HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.LOGON, params, LogonBean.class, new Response.Listener<LogonBean>() {
                         @Override
                         public void onResponse(LogonBean response) {
-//                            Toast.makeText(LoginActivity.this, R.string.toast_logon_succeed, Toast.LENGTH_SHORT).show();
                             Snackbar.make(snackbarLayout, R.string.toast_logon_succeed, Snackbar.LENGTH_LONG).show();
-
-                            setButtonStatus(true);
+//                            setButtonStatus(true);
                             requestLogin();
                         }
                     }, new Response.ErrorListener() {
@@ -187,7 +215,6 @@ public class LoginActivity extends AppCompatActivity {
                         public void onErrorResponse(VolleyError error) {
                             setButtonStatus(true);
                             error.printStackTrace();
-//                            Toast.makeText(LoginActivity.this, R.string.toast_logon_failed, Toast.LENGTH_SHORT).show();
                             Snackbar.make(snackbarLayout, R.string.toast_logon_failed, Snackbar.LENGTH_LONG).show();
                         }
                     }));
@@ -198,8 +225,6 @@ public class LoginActivity extends AppCompatActivity {
         } else { // 未展开
 
             final RelativeLayout buttonsContainer = (RelativeLayout) findViewById(R.id.login_pop_buttons_container);
-            final RelativeLayout container = (RelativeLayout) findViewById(R.id.login_pop_container);
-
             final RelativeLayout.LayoutParams containerLayoutParams = (RelativeLayout.LayoutParams) container.getLayoutParams();
             final int paddingBottom = getResources().getDimensionPixelSize(R.dimen.login_pop_horizontal_padding);
 
@@ -215,7 +240,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
             ValueAnimator va = ValueAnimator.ofFloat(0f, 1f);
-            va.setInterpolator(new GravityInterpolator(true));
+            va.setInterpolator(GravityInterpolator.getInstance(true));
             va.setDuration(Constants.ANIM_COMMON_DURATION);
             va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
@@ -224,13 +249,7 @@ public class LoginActivity extends AppCompatActivity {
                     containerLayoutParams.height = (int) (oriHeight + value);
                     container.setLayoutParams(containerLayoutParams);
 
-//                    Log.e("TAG ------", String.valueOf((int) (oriHeight + value)));
-//                    Log.e("TAG", String.valueOf((int) (containerLayoutParams.height - buttonsContainer.getHeight() - paddingBottom)));
-                    Log.e("TAG", String.format("%f %f", btnLogon.getX(), btnLogon.getY()));
-
-
                     buttonsContainer.setY(containerLayoutParams.height - buttonsContainerHeight - paddingBottom);
-//                    buttonsContainer.setY((int) (oriHeight + (float) animation.getAnimatedValue() * 100));
 
                     btnLogon.setWidth((int) (oriBtnWidth + (targetBtnWidth - oriBtnWidth) * (float) animation.getAnimatedValue()));
                     btnLogin.setAlpha(1 - (float) animation.getAnimatedValue());
@@ -302,7 +321,9 @@ public class LoginActivity extends AppCompatActivity {
 
     private void setButtonStatus(Button animBtn, boolean status) {
         if (status) {
-            oaBtn.cancel();
+            if (animBtn != null) {
+                oaBtn.cancel();
+            }
 //            oaBtn = ObjectAnimator.ofFloat(animBtn, Constants.OBJECT_ANIM_ALPHA, oaBtnValue, 1f).setDuration(Constants.ANIM_BUTTON_ALPHA_DURATION / 5);
 //            oaBtn.setInterpolator(new GravityInterpolator(true));
 //            oaBtn.start();
@@ -313,17 +334,19 @@ public class LoginActivity extends AppCompatActivity {
             btnLogin.setClickable(true);
 
         } else {
-            oaBtn = ObjectAnimator.ofFloat(animBtn, Constants.OBJECT_ANIM_ALPHA, 1f, 0f).setDuration(Constants.ANIM_BUTTON_ALPHA_DURATION);
-            oaBtn.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    oaBtnValue = (float) animation.getAnimatedValue();
-                }
-            });
-            oaBtn.setInterpolator(new LinearInterpolator());
-            oaBtn.setRepeatMode(ObjectAnimator.REVERSE);
-            oaBtn.setRepeatCount(ObjectAnimator.INFINITE);
-            oaBtn.start();
+            if (animBtn != null) {
+                oaBtn = ObjectAnimator.ofFloat(animBtn, Constants.OBJECT_ANIM_ALPHA, 1f, 0f).setDuration(Constants.ANIM_BUTTON_ALPHA_DURATION);
+                oaBtn.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        oaBtnValue = (float) animation.getAnimatedValue();
+                    }
+                });
+                oaBtn.setInterpolator(new LinearInterpolator());
+                oaBtn.setRepeatMode(ObjectAnimator.REVERSE);
+                oaBtn.setRepeatCount(ObjectAnimator.INFINITE);
+                oaBtn.start();
+            }
 
             btnLogon.setClickable(false);
             btnLogin.setClickable(false);

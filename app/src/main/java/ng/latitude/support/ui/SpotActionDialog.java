@@ -10,7 +10,7 @@ public class SpotActionDialog extends DialogFragment {
 //    private static final String SPOT_BEAN = "spot";
 //    private OnSpotForceChangedListener onSpotForceChangedListener;
 //
-//    public static SpotActionDialog newInstance(SpotBean spotBean) {
+//    public static SpotActionDialog getInstance(SpotBean spotBean) {
 //        SpotActionDialog fragment = new SpotActionDialog();
 //        Bundle args = new Bundle();
 //        args.putParcelable(SPOT_BEAN, spotBean);

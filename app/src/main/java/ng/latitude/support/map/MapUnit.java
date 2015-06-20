@@ -14,6 +14,10 @@ import com.amap.api.location.AMapLocationListener;
 import com.amap.api.location.LocationManagerProxy;
 import com.amap.api.location.LocationProviderProxy;
 import com.amap.api.maps.AMap;
+import com.amap.api.maps.AMap.OnCameraChangeListener;
+import com.amap.api.maps.AMap.OnMapClickListener;
+import com.amap.api.maps.AMap.OnMapLoadedListener;
+import com.amap.api.maps.AMap.OnMarkerClickListener;
 import com.amap.api.maps.AMapOptions;
 import com.amap.api.maps.AMapUtils;
 import com.amap.api.maps.CameraUpdateFactory;
@@ -48,10 +52,7 @@ import ng.latitude.support.ui.LatitudeProgressDialog;
 /**
  * Created by Ng on 15/6/13.
  */
-public class MapUnit implements AMap.OnMarkerClickListener,
-        AMap.OnMarkerDragListener, AMap.OnMapLoadedListener, AMap.OnCameraChangeListener,
-        LocationSource,
-        AMapLocationListener, AMap.OnMapClickListener, SensorUnit.OnHeadingChangedListener, InfoWindowAdapter.OnInfoWindowButtonClickedListener {
+public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowAdapter.OnInfoWindowButtonClickedListener {
 
     private MapView mapView;
     private AMap aMap;
@@ -73,7 +74,91 @@ public class MapUnit implements AMap.OnMarkerClickListener,
     private int headingGap;
     private Marker currentMarker;
     private boolean isLoadingMarkers = false;
+    private boolean isRanBefore = false;
 
+    private AMapLocationListener aMapLocationListener = new AMapLocationListener() {
+        @Override
+        public void onLocationChanged(AMapLocation aLocation) {
+            if (onLocationFixListener != null)
+                onLocationFixListener.gpsStatus(isGPSEnabled());
+
+            if (onLocationChangedListener != null && aLocation != null && aLocation.hasAccuracy()) {
+
+                String provider = aLocation.getProvider();
+//
+                if (provider.equals(Constants.LOCATION_PROVIDER_GPS)) {// GPS定位
+                    if (onLocationFixListener != null)
+                        onLocationFixListener.gpsFixedLocation();
+//
+                } else if (provider.equals(Constants.LOCATION_PROVIDER_LBS)) {// 网络定位
+//
+                    if (onLocationFixListener != null)
+                        onLocationFixListener.lbsFixedLocation();
+//
+                }
+
+//            aLocation.setBearing(Math.abs(heading - 90) % 360); // 总之要减90
+
+
+//            aLocation.setBearing(360 - heading); // ALocation为顺时针计数
+                aLocation.setAccuracy(Constants.GAMING_CAPTURE_RANGE); // 范围圈
+
+                Log.e("onLocationChanged", String.format("%s: %f %f\tbearing: %f", aLocation.getProvider(), aLocation.getLatitude(), aLocation.getLongitude(), aLocation.getBearing()));
+
+                onLocationChangedListener.onLocationChanged(aLocation);// 显示系统小蓝点
+//            aMap.setMyLocationRotateAngle(heading);// 设置小蓝点旋转角度
+
+                if (!isRanBefore) {
+                    isRanBefore = true;
+                    PreferenceUtils.savePreference(PreferenceUtils.KEY_RAN_BEFORE, isRanBefore);
+                    aMap.moveCamera(CameraUpdateFactory.zoomTo(Constants.MAP_INIT_ZOOM_LEVEL));
+                }
+
+                aMap.moveCamera(CameraUpdateFactory.changeTilt(Constants.MAP_INIT_TILT));
+                position[0] = aLocation.getLatitude();
+                position[1] = aLocation.getLongitude();
+            }
+        }
+
+        @Override
+        public void onLocationChanged(Location location) {
+
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
+    private LocationSource locationSource = new LocationSource() {
+        @Override
+        public void activate(OnLocationChangedListener listener) {
+            if (onLocationChangedListener == null)
+                onLocationChangedListener = listener;
+        }
+
+        @Override
+        public void deactivate() {
+            if (locationManagerProxy != null) {
+                locationManagerProxy.removeUpdates(aMapLocationListener);
+                locationManagerProxy.destory();
+            }
+            locationManagerProxy = null;
+
+            if (onLocationFixListener != null)
+                onLocationFixListener.stopFixLocation();
+        }
+    };
 
     public MapUnit(Fragment fragment, View view) {
 
@@ -84,8 +169,8 @@ public class MapUnit implements AMap.OnMarkerClickListener,
 //        sensorUnit.setOnHeadingChangedListener(this);
 //        sensorUnit.bind();
 
-        if (PreferenceUtils.getFloat(PreferenceUtils.KEY_LATITUDE) != PreferenceUtils.FLOAT_NOT_EXIST) {
-            position[0] = PreferenceUtils.getFloat(PreferenceUtils.KEY_LATITUDE);
+        position[0] = PreferenceUtils.getFloat(PreferenceUtils.KEY_LATITUDE);
+        if (position[0] != PreferenceUtils.FLOAT_NOT_EXIST) {
             position[1] = PreferenceUtils.getFloat(PreferenceUtils.KEY_LONGITUDE);
             initBounds = new LatLngBounds.Builder().include(new LatLng(position[0], position[1])).build();
         }
@@ -93,30 +178,90 @@ public class MapUnit implements AMap.OnMarkerClickListener,
         if (aMap == null) {
             aMap = mapView.getMap();
 
-            aMap.setOnMarkerDragListener(this);// 设置marker可拖拽事件监听器
-            aMap.setOnMapLoadedListener(this);// 设置amap加载成功事件监听器
-            aMap.setOnMarkerClickListener(this);// 设置点击marker事件监听器
-            aMap.setOnMapClickListener(this);
-            aMap.setOnCameraChangeListener(this);
+            /*
+            *   地图加载成功监听
+            *
+            * */
+            aMap.setOnMapLoadedListener(new OnMapLoadedListener() { // 设置amap加载成功事件监听器
+                @Override
+                public void onMapLoaded() {
+                    if (initBounds != null) {
+                        aMap.moveCamera(CameraUpdateFactory.newLatLngBounds(initBounds, 0));
+                        aMap.moveCamera(CameraUpdateFactory.zoomTo(Constants.MAP_INIT_ZOOM_LEVEL));
+                    }
+                    aMap.moveCamera(CameraUpdateFactory.changeTilt(Constants.MAP_INIT_TILT));
+                }
+            });
+
+            /*
+            *   Marker点击监听
+            *
+            * */
+            aMap.setOnMarkerClickListener(new OnMarkerClickListener() {
+                @Override
+                public boolean onMarkerClick(Marker marker) { // 设置点击marker事件监听器
+                    currentMarker = marker;
+                    marker.showInfoWindow();
+                    return true;
+                }
+            });
+
+
+            /*
+            *   地图点击监听
+            *
+            * */
+            aMap.setOnMapClickListener(new OnMapClickListener() {
+                @Override
+                public void onMapClick(LatLng latLng) {
+                    currentMarker.hideInfoWindow();
+                }
+            });
+
+            /*
+            *   视图改变监听
+            *
+            * */
+            aMap.setOnCameraChangeListener(new OnCameraChangeListener() {
+                @Override
+                public void onCameraChange(CameraPosition cameraPosition) {
+                    //        heading = (headingGap + (int) cameraPosition.bearing) % 360;
+                    //        aMap.setMyLocationRotateAngle(heading);
+
+                }
+
+                @Override
+                public void onCameraChangeFinish(CameraPosition cameraPosition) {
+                    //        if (lastZoom > cameraPosition.zoom && aMap.getMyLocation() != null && aMap.getMyLocation().hasAccuracy()) {
+                    ////            loadMarkers();
+                    //            lastZoom = cameraPosition.zoom;
+                    //        }
+                }
+            });
+
+            /*
+            *   定位监听
+            *
+            * */
+            aMap.setLocationSource(locationSource);
+
             aMap.setInfoWindowAdapter(new InfoWindowAdapter().setOnInfoWindowButtonClickedListener(this));// 设置自定义InfoWindow样式
 
 
             MyLocationStyle myLocationStyle = new MyLocationStyle();
             myLocationStyle.myLocationIcon(BitmapDescriptorFactory.fromResource(R.drawable.point));// 设置小蓝点的图标
             // myLocationStyle.anchor(int,int)//设置小蓝点的锚点
-
             myLocationStyle.radiusFillColor(this.fragment.getResources().getColor(R.color.location_green_primary));// 设置圆形的填充颜色
             myLocationStyle.strokeColor(this.fragment.getResources().getColor(R.color.location_green_primary_light));// 设置圆形的边框颜色
             myLocationStyle.strokeWidth(4.0f);// 设置圆形的边框粗细
 
             aMap.setMyLocationStyle(myLocationStyle);
-            aMap.setLocationSource(this);// 设置定位监听
-            aMap.getUiSettings().setMyLocationButtonEnabled(true);// 设置默认定位按钮是否显示
-            aMap.getUiSettings().setCompassEnabled(true);// 指南针
             aMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
             aMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);//设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种
             aMap.getUiSettings().setZoomPosition(AMapOptions.ZOOM_POSITION_RIGHT_CENTER);// 缩放按钮位置
             aMap.getUiSettings().setTiltGesturesEnabled(false);
+            aMap.getUiSettings().setMyLocationButtonEnabled(true);// 设置默认定位按钮是否显示
+            aMap.getUiSettings().setCompassEnabled(true);// 指南针
 //            aMap.setMapType(AMap.MAP_TYPE_SATELLITE);// 设置地图底图
 
         }
@@ -154,7 +299,7 @@ public class MapUnit implements AMap.OnMarkerClickListener,
         params.put(HttpUtils.Params.USER_ID, String.valueOf(Latitude.getUserInfo().getId()));
         params.put(HttpUtils.Params.FORCE, String.valueOf(Latitude.getUserInfo().getForce()));
 
-        HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, Constants.URL_CAPTURE_SPOT, params, CaptureSpotBean.class, new Response.Listener<CaptureSpotBean>() {
+        HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.CAPTURE_SPOT, params, CaptureSpotBean.class, new Response.Listener<CaptureSpotBean>() {
             @Override
             public void onResponse(CaptureSpotBean response) {
                 if (response.getState() == 1) {
@@ -203,15 +348,13 @@ public class MapUnit implements AMap.OnMarkerClickListener,
                 final LatitudeProgressDialog progressDialog = new LatitudeProgressDialog(fragment.getActivity(), fragment.getActivity().getString(R.string.dialog_add_marker_creating));
                 progressDialog.show();
 
-                HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, Constants.URL_SET_SPOT, params, SetSpotBean.class, new Response.Listener<SetSpotBean>() {
+                HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.SET_SPOT, params, SetSpotBean.class, new Response.Listener<SetSpotBean>() {
                     @Override
                     public void onResponse(SetSpotBean response) {
 
                         if (response.getState() == 1) { // 成功
 
 //                            aMap.addMarker(getDefaultMarkerOptions(aMap.getCameraPosition().target, Latitude.getUserInfo().getForce()));
-
-                            loadMarkers();
 
                             if (onMarkerAddedListener != null)
                                 onMarkerAddedListener.onMarkerAdded();
@@ -247,52 +390,6 @@ public class MapUnit implements AMap.OnMarkerClickListener,
     }
 
     @Override
-    public void onLocationChanged(AMapLocation aLocation) {
-
-        if (onLocationFixListener != null)
-            onLocationFixListener.gpsStatus(isGPSEnabled());
-
-        if (onLocationChangedListener != null && aLocation != null && aLocation.hasAccuracy()) {
-
-            String provider = aLocation.getProvider();
-
-            if (provider.equals(Constants.LOCATION_PROVIDER_GPS)) {// GPS定位
-                if (onLocationFixListener != null)
-                    onLocationFixListener.gpsFixedLocation();
-
-            } else if (provider.equals(Constants.LOCATION_PROVIDER_LBS)) {// 网络定位
-
-                if (onLocationFixListener != null)
-                    onLocationFixListener.lbsFixedLocation();
-
-            }
-
-//            aLocation.setBearing(Math.abs(heading - 90) % 360); // 总之要减90
-
-
-//            aLocation.setBearing(360 - heading); // ALocation为顺时针计数
-            aLocation.setAccuracy(
-                    Constants.GAMING_CAPTURE_RANGE); // 范围圈
-
-            Log.e("onLocationChanged", String.format("%s: %f %f\tbearing: %f", aLocation.getProvider(), aLocation.getLatitude(), aLocation.getLongitude(), aLocation.getBearing()));
-
-            onLocationChangedListener.onLocationChanged(aLocation);// 显示系统小蓝点
-//            aMap.setMyLocationRotateAngle(heading);// 设置小蓝点旋转角度
-
-            if (!PreferenceUtils.getBoolean(PreferenceUtils.KEY_RAN_BEFORE)) {
-                PreferenceUtils.savePreference(PreferenceUtils.KEY_RAN_BEFORE, true);
-                aMap.moveCamera(CameraUpdateFactory.zoomTo(Constants.MAP_INIT_ZOOM_LEVEL));
-            }
-
-            aMap.moveCamera(CameraUpdateFactory.changeTilt(Constants.MAP_INIT_TILT));
-
-            position[0] = aLocation.getLatitude();
-            position[1] = aLocation.getLongitude();
-        }
-
-    }
-
-    @Override
     public void onHeadingChanged(int heading) {
 
 //        headingGap = heading - (int) aMap.getCameraPosition().bearing;
@@ -300,30 +397,15 @@ public class MapUnit implements AMap.OnMarkerClickListener,
 //        aMap.setMyLocationRotateAngle(this.heading);
     }
 
-    @Override
-    public void onCameraChange(CameraPosition cameraPosition) {
-//        heading = (headingGap + (int) cameraPosition.bearing) % 360;
-//        aMap.setMyLocationRotateAngle(heading);
-
-    }
-
-    @Override
-    public void onCameraChangeFinish(CameraPosition cameraPosition) {
-        if (lastZoom > cameraPosition.zoom && aMap.getMyLocation() != null && aMap.getMyLocation().hasAccuracy()) {
-            loadMarkers();
-            lastZoom = cameraPosition.zoom;
-        }
-    }
-
 
     public void loadMarkers() {
 
-        int delay = 500; // 防止太快获取座标出错
+        int delay = 1000; // 防止太快获取座标出错
 
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (!isLoadingMarkers) {
+                if (!isLoadingMarkers && mapView != null && aMap != null) {
                     isLoadingMarkers = true;
 
                     if (onMarkerLoadListener != null) {
@@ -334,23 +416,21 @@ public class MapUnit implements AMap.OnMarkerClickListener,
                     LatLng leftTop = visibleRegion.farLeft;
                     LatLng rightBottom = visibleRegion.nearRight;
 
-                    Log.e("TAG", String.valueOf(leftTop.latitude));
-                    Log.e("TAG", String.valueOf(leftTop.longitude));
-                    Log.e("TAG", String.valueOf(rightBottom.latitude));
-                    Log.e("TAG", String.valueOf(rightBottom.longitude));
-
+                    Log.e("TAG", String.valueOf(leftTop.latitude) + ", " + String.valueOf(leftTop.longitude));
+                    Log.e("TAG", String.valueOf(rightBottom.latitude) + ", " + String.valueOf(rightBottom.longitude));
                     HashMap<String, String> params = new HashMap<>();
                     params.put(HttpUtils.Params.LEFT_TOP_LATITUDE, String.valueOf(leftTop.latitude));
                     params.put(HttpUtils.Params.LEFT_TOP_LONGITUDE, String.valueOf(leftTop.longitude));
                     params.put(HttpUtils.Params.RIGHT_BOTTOM_LATITUDE, String.valueOf(rightBottom.latitude));
                     params.put(HttpUtils.Params.RIGHT_BOTTOM_LONGITUDE, String.valueOf(rightBottom.longitude));
 
-                    HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, Constants.URL_GET_SPOTS, params, SpotBean[].class, new Response.Listener<SpotBean[]>() {
+                    HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.GET_SPOTS, params, SpotBean[].class, new Response.Listener<SpotBean[]>() {
                         @Override
                         public void onResponse(SpotBean[] response) {
 
-//                            spotBeans = response.clone();
-//                            markerIdToPositionOfSpotBeans.clear();
+                            for (Marker marker : aMap.getMapScreenMarkers()) {
+                                marker.remove();
+                            }
 
                             for (int i = 0; i < response.length; i++) {
 
@@ -385,52 +465,18 @@ public class MapUnit implements AMap.OnMarkerClickListener,
         }, delay);
     }
 
-    @Override
-    public void activate(OnLocationChangedListener listener) {
-
-        if (onLocationChangedListener == null)
-            onLocationChangedListener = listener;
-    }
-
-    @Override
-    public void deactivate() {
-        if (locationManagerProxy != null) {
-            locationManagerProxy.removeUpdates(this);
-            locationManagerProxy.destory();
-        }
-        locationManagerProxy = null;
-
-        if (onLocationFixListener != null)
-            onLocationFixListener.stopFixLocation();
-    }
-
     private void requestLocation() {
         if (locationManagerProxy == null) {
             locationManagerProxy = LocationManagerProxy.getInstance(fragment.getActivity());
             /*
-			 * ，第一个参数是定位provider，第二个参数时间最短是2000毫秒，第三个参数距离间隔单位是米，第四个参数是定位监听者
+             * ，第一个参数是定位provider，第二个参数时间最短是2000毫秒，第三个参数距离间隔单位是米，第四个参数是定位监听者
 			 */
             locationManagerProxy.requestLocationData(
-                    LocationProviderProxy.AMapNetwork, 5000, 10, this);
-
-            Log.e(Thread.currentThread().getStackTrace()[1].getClassName() + "#" + Thread.currentThread().getStackTrace()[1].getMethodName()
-                    , "");
-
+                    LocationProviderProxy.AMapNetwork, 5000, 10, aMapLocationListener);
 
             if (onLocationFixListener != null)
                 onLocationFixListener.startFixLocation();
         }
-    }
-
-    @Override
-    public void onMapLoaded() {
-
-        if (initBounds != null) {
-            aMap.moveCamera(CameraUpdateFactory.newLatLngBounds(initBounds, 0));
-            aMap.moveCamera(CameraUpdateFactory.zoomTo(Constants.MAP_INIT_ZOOM_LEVEL));
-        }
-
-        aMap.moveCamera(CameraUpdateFactory.changeTilt(Constants.MAP_INIT_TILT));
     }
 
     public void onCreate(Bundle savedInstanceState) {
@@ -445,7 +491,7 @@ public class MapUnit implements AMap.OnMarkerClickListener,
         mapView.onPause();
         PreferenceUtils.savePreference(PreferenceUtils.KEY_LATITUDE, (float) position[0]);
         PreferenceUtils.savePreference(PreferenceUtils.KEY_LONGITUDE, (float) position[1]);
-        deactivate();
+        locationSource.deactivate();
 //        sensorUnit.release();
     }
 
@@ -477,20 +523,6 @@ public class MapUnit implements AMap.OnMarkerClickListener,
     }
 
     @Override
-    public void onMapClick(LatLng latLng) {
-        currentMarker.hideInfoWindow();
-    }
-
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-
-        currentMarker = marker;
-        marker.showInfoWindow();
-
-        return true;
-    }
-
-    @Override
     public void onInfoWindowButtonClicked(Marker marker) {
         if (onCaptureButtonClickedListener != null) {
             if (AMapUtils.calculateLineDistance(marker.getPosition(), new LatLng(aMap.getMyLocation().getLatitude(), aMap.getMyLocation().getLongitude())) <= Constants.GAMING_CAPTURE_RANGE) {
@@ -499,41 +531,6 @@ public class MapUnit implements AMap.OnMarkerClickListener,
                 onCaptureButtonClickedListener.onCaptureButtonClicked(false, marker);
             }
         }
-    }
-
-    @Override
-    public void onMarkerDragStart(Marker marker) {
-
-    }
-
-    @Override
-    public void onMarkerDrag(Marker marker) {
-
-    }
-
-    @Override
-    public void onMarkerDragEnd(Marker marker) {
-
-    }
-
-    @Override
-    public void onLocationChanged(Location aLocation) {
-
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
     }
 
 

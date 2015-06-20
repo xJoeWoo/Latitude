@@ -3,19 +3,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:layout_alignParentTop="true"
-        android:background="?attr/colorPrimary"/>
+    <include layout="@layout/widget_toolbar" />
 
     <com.amap.api.maps.MapView
         android:id="@+id/map_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/toolbar" />
-
 
     <ImageView
         android:id="@+id/iv_main_set_position"

@@ -20,11 +20,6 @@ public class InfoWindowAdapter implements AMap.InfoWindowAdapter {
 
     private OnInfoWindowButtonClickedListener onInfoWindowButtonClickedListener;
 
-    public InfoWindowAdapter setOnInfoWindowButtonClickedListener(OnInfoWindowButtonClickedListener onInfoWindowButtonClickedListener) {
-        this.onInfoWindowButtonClickedListener = onInfoWindowButtonClickedListener;
-        return this;
-    }
-
     @Override
     public View getInfoWindow(Marker marker) {
 
@@ -32,6 +27,11 @@ public class InfoWindowAdapter implements AMap.InfoWindowAdapter {
 
         render(marker, v);
         return v;
+    }
+
+    public InfoWindowAdapter setOnInfoWindowButtonClickedListener(OnInfoWindowButtonClickedListener onInfoWindowButtonClickedListener) {
+        this.onInfoWindowButtonClickedListener = onInfoWindowButtonClickedListener;
+        return this;
     }
 
     @Override

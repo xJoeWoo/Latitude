@@ -36,7 +36,7 @@ public class Latitude extends Application {
 
         final int textColor = v.getCurrentTextColor();
 
-        ObjectAnimator oa = ObjectAnimator.ofFloat(v, Constants.OBJECT_ANIM_TRANSLATION_X, 0f, Constants.ANIM_SHAKE_RANGE).setDuration(Constants.ANIM_SHAKE_DURATION);
+        final ObjectAnimator oa = ObjectAnimator.ofFloat(v, Constants.OBJECT_ANIM_TRANSLATION_X, 0f, Constants.ANIM_SHAKE_RANGE).setDuration(Constants.ANIM_SHAKE_DURATION);
 
         oa.setInterpolator(new CycleInterpolator(Constants.ANIM_SHAKE_TIMES));
         oa.addListener(new AnimatorListenerAdapter() {
@@ -52,6 +52,7 @@ public class Latitude extends Application {
                 v.getBackground().setColorFilter(null);
                 if (reset)
                     v.setText("");
+                oa.removeAllListeners();
             }
         });
         oa.start();

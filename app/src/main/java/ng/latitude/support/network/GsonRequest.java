@@ -60,7 +60,7 @@ public class GsonRequest<T> extends Request<T> {
 
             Log.e("Get Json ", json);
 
-            if(json.equals("")||json.equals("null"))
+            if (json.equals("") || json.equals("null"))
                 throw new IllegalArgumentException(HttpUtils.Errors.NO_RETURN);
 
             if (json.equals("{\"state\":0}")) {
@@ -73,7 +73,7 @@ public class GsonRequest<T> extends Request<T> {
             return Response.error(new ParseError(e));
         } catch (JsonSyntaxException e) {
             return Response.error(new ParseError(e));
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return Response.error(new ParseError(e));
         } catch (Exception e) {
             return Response.error(new ParseError(e));
