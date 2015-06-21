@@ -33,7 +33,6 @@ import ng.latitude.support.conf.Latitude;
 import ng.latitude.support.map.MapUnit;
 import ng.latitude.support.network.GsonRequest;
 import ng.latitude.support.network.HttpUtils;
-import ng.latitude.support.ui.BottomButtons;
 import ng.latitude.support.ui.BottomInfo;
 import ng.latitude.support.ui.GravityInterpolator;
 import ng.latitude.support.ui.ScoreView;
@@ -51,7 +50,7 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     private SingleFragmentActivity activity;
     private View rootView;
     private ImageView ivSetPosition;
-    private BottomButtons bBtn;
+    //    private BottomButtons bBtn;
     private BottomInfo bInf;
     private MapUnit mapUtils;
     private ScoreView scoreView;
@@ -120,24 +119,24 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
 
     private void findViews(View v) {
         ivSetPosition = (ImageView) v.findViewById(R.id.iv_main_set_position);
-        bBtn = (BottomButtons) v.findViewById(R.id.bbtn_main);
+//        bBtn = (BottomButtons) v.findViewById(R.id.bbtn_main);
         bInf = (BottomInfo) v.findViewById(R.id.binf_main);
         snackBarLayout = (CoordinatorLayout) v.findViewById(R.id.snb_main);
     }
 
     private void setListeners() {
-        bBtn.setListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                addMarkerToMap(aMap.getCameraPosition().target);
-                mapUtils.addMarkerToMap();
-            }
-        }, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setPosition(false);
-            }
-        });
+//        bBtn.setListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+////                addMarkerToMap(aMap.getCameraPosition().target);
+//                mapUtils.addMarkerToMap();
+//            }
+//        }, new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                setPosition(false);
+//            }
+//        });
         mapUtils.setOnMarkerAddedListener(this);
         mapUtils.setOnLocationFixListener(this);
         mapUtils.setOnCaptureButtonClickedListener(this);
@@ -153,6 +152,9 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
             HashMap<String, String> params = new HashMap<>();
             params.put(HttpUtils.Params.USER_ID, String.valueOf(Latitude.getUserInfo().getId()));
             params.put(HttpUtils.Params.FORCE, String.valueOf(Latitude.getUserInfo().getForce()));
+
+            Log.e("TAG", String.valueOf(HttpUtils.Params.USER_ID) + " : " + String.valueOf(Latitude.getUserInfo().getId()));
+            Log.e("TAG", String.valueOf(HttpUtils.Params.FORCE) + " : " + String.valueOf(Latitude.getUserInfo().getForce()));
 
             HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.GET_SCORE, params, GetScoreBean.class, new Response.Listener<GetScoreBean>() {
                 @Override
@@ -184,7 +186,9 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     @Override
     public void onMarkerFailed(String title, String snippet, int state) {
 
-        //1 成功，2 失败，0 超过3个点，-1 自定义错误
+        //1 成功，2 失败，0 超过3个点，-1 自定义错误，3 取消
+
+        setPosition(false);
 
         switch (state) {
             case 2:
@@ -193,6 +197,8 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
                 break;
             case 0:
                 Snackbar.make(snackBarLayout, R.string.toast_spot_over_limit, Snackbar.LENGTH_LONG).show();
+                break;
+            case 3:
                 break;
             default:
                 Snackbar.make(snackBarLayout, R.string.toast_network_error, Snackbar.LENGTH_SHORT).show();
@@ -240,20 +246,21 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     public void setPosition(boolean isSetting) {
         if (isSetting) {
             currentBackStatus = SingleFragmentActivity.BackStatus.SettingPosition;
-            startSetPositionAnim(true);
-            bBtn.show();
             activity.findViewById(R.id.action_add).setVisibility(View.GONE);
+            startSetPositionAnim(true);
+            mapUtils.addMarkerToMap();
+//            bBtn.show();
         } else {
+            activity.findViewById(R.id.action_add).setVisibility(View.VISIBLE);
             currentBackStatus = SingleFragmentActivity.BackStatus.Normal;
             startSetPositionAnim(false);
-            bBtn.hide();
-            activity.findViewById(R.id.action_add).setVisibility(View.VISIBLE);
+//            bBtn.hide();
         }
     }
 
     private void startSetPositionAnim(final boolean visible) {
         float transY = rootView.findViewById(R.id.rv_main).getHeight() - ivSetPosition.getY();
-        final ObjectAnimator oa = ObjectAnimator.ofFloat(ivSetPosition, Constants.OBJECT_ANIM_TRANSLATION_Y, visible ? transY : 0, visible ? 0 : 0).setDuration(Constants.ANIM_COMMON_DURATION);
+        final ObjectAnimator oa = ObjectAnimator.ofFloat(ivSetPosition, Constants.OBJECT_ANIM_TRANSLATION_Y, visible ? transY : 0, 0).setDuration(Constants.ANIM_SLOW_DURATION);
         oa.setInterpolator(GravityInterpolator.getInstance(visible));
         oa.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -270,7 +277,7 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
             }
         });
         oa.start();
-        ObjectAnimator.ofFloat(ivSetPosition, Constants.OBJECT_ANIM_ALPHA, visible ? 0f : 1f, visible ? 1f : 0f).setDuration(Constants.ANIM_COMMON_DURATION).start();
+        ObjectAnimator.ofFloat(ivSetPosition, Constants.OBJECT_ANIM_ALPHA, visible ? 0f : 1f, visible ? 1f : 0f).setDuration(Constants.ANIM_SLOW_DURATION).start();
     }
 
     @Override

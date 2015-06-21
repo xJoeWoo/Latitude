@@ -39,7 +39,7 @@
     <string name="dialog_confirm_logon_title">账号不存在</string>
     <string name="dialog_confirm_logon_message">是否创建账号？</string>
 
-    <string name="dialog_add_marker_title">创建据点</string>
+    <string name="dialog_add_marker_title">在当前位置创建据点</string>
     <string name="dialog_add_marker_hint_name">名称</string>
     <string name="dialog_add_marker_hint_snippet">信息(选填)</string>
     <string name="dialog_add_marker_creating">创建中…</string>

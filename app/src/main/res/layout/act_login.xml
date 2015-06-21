@@ -33,8 +33,6 @@
         android:alpha="0"
         android:animateLayoutChanges="true"
         android:background="@drawable/bg_login_pop"
-        android:descendantFocusability="beforeDescendants"
-        android:focusableInTouchMode="true"
         android:paddingBottom="@dimen/login_pop_horizontal_padding"
         android:paddingLeft="@dimen/login_pop_vertical_padding"
         android:paddingRight="@dimen/login_pop_vertical_padding"

@@ -2,6 +2,8 @@ package ng.latitude.support.map;
 
 import android.app.Fragment;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -32,7 +34,6 @@ import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.MyLocationStyle;
-import com.amap.api.maps.model.VisibleRegion;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -56,11 +57,13 @@ import ng.latitude.support.ui.LatitudeProgressDialog;
  */
 public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowAdapter.OnInfoWindowButtonClickedListener {
 
-    private MapView mapView;
+    private final Bitmap markerForce1 = BitmapFactory.decodeResource(Latitude.getContext().getResources(), R.drawable.marker_force_1);
+    private final Bitmap markerForce2 = BitmapFactory.decodeResource(Latitude.getContext().getResources(), R.drawable.marker_force_2);
+    private final MapView mapView;
+    private final Fragment fragment;
     private AMap aMap;
-    private double[] position = new double[2];
+    private double[] latestLatLng = new double[2];
     private LatLngBounds initBounds;
-    private Fragment fragment;
     private LocationSource.OnLocationChangedListener onLocationChangedListener;
     private LocationManagerProxy locationManagerProxy;
     private OnLocationFixListener onLocationFixListener;
@@ -70,16 +73,15 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
     private OnSpotForceChangedListener onSpotForceChangedListener;
     private SensorUnit sensorUnit;
     private LatLng lastFix = new LatLng(0d, 0d);
-    //    private SpotBean[] spotBeans;
-    //    private HashMap<String, Integer> markerIdToPositionOfSpotBeans = new HashMap<>();
     private float lastZoom = 99;
     private int heading;
     private int headingGap;
     private Marker currentMarker;
-    private Circle myLocationCircle;
+    private Circle myLocationCenterCircle;
+    private Circle myLocationRangeCircle;
     private boolean isLoadingMarkers = false;
     private boolean isRanBefore = false;
-
+    private boolean isAddingMarker = false;
     private AMapLocationListener aMapLocationListener = new AMapLocationListener() {
         @Override
         public void onLocationChanged(AMapLocation aLocation) {
@@ -88,7 +90,8 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
             LatLng currentFix = new LatLng(aLocation.getLatitude(), aLocation.getLongitude());
 
-            if (onLocationChangedListener != null && aLocation.hasAccuracy()
+            if (onLocationChangedListener != null && aLocation.hasAccuracy() && !isAddingMarker
+                    && Math.abs(aLocation.getLatitude()) > 0.1 && Math.abs(aLocation.getLongitude()) > 0.1
                     && AMapUtils.calculateLineDistance(lastFix, currentFix) >= Constants.LOCATION_UPDATE_ACCURATE) {
 
                 lastFix = currentFix;
@@ -110,10 +113,13 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
                 Log.e("onLocationChanged", String.format("%s: %f %f\tbearing: %f", aLocation.getProvider(), aLocation.getLatitude(), aLocation.getLongitude(), aLocation.getBearing()));
 
-                if (myLocationCircle != null) {
-                    myLocationCircle.setCenter(currentFix);
+                if (myLocationCenterCircle != null) {
+                    myLocationCenterCircle.setCenter(currentFix);
+                    myLocationRangeCircle.setCenter(currentFix);
                 } else {
-                    myLocationCircle = aMap.addCircle(new CircleOptions().center(currentFix).radius(1.5d).fillColor(fragment.getResources().getColor(R.color.green_primary)).zIndex(999).strokeWidth(0f));
+                    myLocationCenterCircle = aMap.addCircle(new CircleOptions().center(currentFix).radius(1.5d).fillColor(fragment.getResources().getColor(R.color.green_primary)).zIndex(999).strokeWidth(0f));
+                    myLocationRangeCircle = aMap.addCircle(new CircleOptions().center(currentFix).radius(Constants.GAMING_CAPTURE_RANGE).fillColor(fragment.getResources().getColor(R.color.location_green_primary))
+                            .strokeColor(fragment.getResources().getColor(R.color.location_green_primary_light)).strokeWidth(4f));
                 }
 
                 onLocationChangedListener.onLocationChanged(aLocation);// 显示系统小蓝点
@@ -126,8 +132,8 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                 }
 
                 aMap.moveCamera(CameraUpdateFactory.changeTilt(Constants.MAP_INIT_TILT));
-                position[0] = aLocation.getLatitude();
-                position[1] = aLocation.getLongitude();
+                latestLatLng[0] = aLocation.getLatitude();
+                latestLatLng[1] = aLocation.getLongitude();
             }
         }
 
@@ -180,10 +186,10 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 //        sensorUnit.setOnHeadingChangedListener(this);
 //        sensorUnit.bind();
 
-        position[0] = PreferenceUtils.getFloat(PreferenceUtils.KEY_LATITUDE);
-        if (position[0] != PreferenceUtils.FLOAT_NOT_EXIST) {
-            position[1] = PreferenceUtils.getFloat(PreferenceUtils.KEY_LONGITUDE);
-            initBounds = new LatLngBounds.Builder().include(new LatLng(position[0], position[1])).build();
+        latestLatLng[0] = PreferenceUtils.getFloat(PreferenceUtils.KEY_LATITUDE);
+        if (latestLatLng[0] != PreferenceUtils.FLOAT_NOT_EXIST) {
+            latestLatLng[1] = PreferenceUtils.getFloat(PreferenceUtils.KEY_LONGITUDE);
+            initBounds = new LatLngBounds.Builder().include(new LatLng(latestLatLng[0], latestLatLng[1])).build();
         }
 
         if (aMap == null) {
@@ -200,7 +206,6 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                         aMap.moveCamera(CameraUpdateFactory.newLatLngBounds(initBounds, 0));
                         aMap.moveCamera(CameraUpdateFactory.zoomTo(Constants.MAP_INIT_ZOOM_LEVEL));
                     }
-//                    aMap.moveCamera(CameraUpdateFactory.changeTilt(Constants.MAP_INIT_TILT));
                 }
             });
 
@@ -247,8 +252,9 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                     ////            loadMarkers();
                     //            lastZoom = cameraPosition.zoom;
                     //        }
-
-                    aMap.moveCamera(CameraUpdateFactory.changeTilt(Constants.MAP_INIT_TILT));
+                    if (aMap.getCameraPosition().tilt != Constants.MAP_INIT_TILT) {
+                        aMap.moveCamera(CameraUpdateFactory.changeTilt(Constants.MAP_INIT_TILT));
+                    }
                 }
             });
 
@@ -264,9 +270,8 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
             MyLocationStyle myLocationStyle = new MyLocationStyle();
             myLocationStyle.myLocationIcon(BitmapDescriptorFactory.fromResource(R.drawable.transperant));// 设置小蓝点的图标
             // myLocationStyle.anchor(int,int)//设置小蓝点的锚点
-            myLocationStyle.radiusFillColor(this.fragment.getResources().getColor(R.color.location_green_primary));// 设置圆形的填充颜色
-            myLocationStyle.strokeColor(this.fragment.getResources().getColor(R.color.location_green_primary_light));// 设置圆形的边框颜色
-            myLocationStyle.strokeWidth(4.0f);// 设置圆形的边框粗细
+            myLocationStyle.radiusFillColor(this.fragment.getResources().getColor(android.R.color.transparent));// 设置圆形的填充颜色
+            myLocationStyle.strokeWidth(0);// 设置圆形的边框粗细
 
             aMap.setMyLocationStyle(myLocationStyle);
             aMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
@@ -275,9 +280,12 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
             aMap.getUiSettings().setTiltGesturesEnabled(false);
             aMap.getUiSettings().setMyLocationButtonEnabled(true);// 设置默认定位按钮是否显示
             aMap.getUiSettings().setCompassEnabled(true);// 指南针
+            aMap.showMapText(false);
 //            aMap.setMapType(AMap.MAP_TYPE_SATELLITE);// 设置地图底图
 
         }
+
+
     }
 
     public void setOnLocationFixListener(OnLocationFixListener onLocationFixListener) {
@@ -339,67 +347,90 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
         }));
     }
 
-    public boolean addMarkerToMap() {
-        return addMarkerToMap(null, null);
+    public void addMarkerToMap() {
+        addMarkerToMap(null, null);
     }
 
-    public boolean addMarkerToMap(String title, String snippet) {
-
-        final AddMarketDialog dialog = AddMarketDialog.newInstance(title, snippet);
-
-        dialog.setOnMarkerConfirmedListener(new AddMarketDialog.OnMarkerConfirmedListener() {
+    public void addMarkerToMap(final String title, final String snippet) {
+        isAddingMarker = true;
+        aMap.animateCamera(CameraUpdateFactory.changeLatLng(lastFix), Constants.ANIM_SLOW_DURATION, new AMap.CancelableCallback() {
             @Override
-            public void onMarkerConfirmed(final String title, final String snippet) {
-                HashMap<String, String> params = new HashMap<>();
-                params.put(HttpUtils.Params.USER_ID, String.valueOf(Latitude.getUserInfo().getId()));
-                params.put(HttpUtils.Params.SPOT_TITLE, title);
-                params.put(HttpUtils.Params.SPOT_SNIPPET, snippet);
-                params.put(HttpUtils.Params.LATITUDE, String.valueOf(aMap.getCameraPosition().target.latitude));
-                params.put(HttpUtils.Params.LONGITUDE, String.valueOf(aMap.getCameraPosition().target.longitude));
-                params.put(HttpUtils.Params.FORCE, String.valueOf(Latitude.getUserInfo().getForce()));
-
-                final LatitudeProgressDialog progressDialog = new LatitudeProgressDialog(fragment.getActivity(), fragment.getActivity().getString(R.string.dialog_add_marker_creating));
-                progressDialog.show();
-
-                HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.SET_SPOT, params, SetSpotBean.class, new Response.Listener<SetSpotBean>() {
+            public void onFinish() {
+                new Handler().postDelayed(new Runnable() {
                     @Override
-                    public void onResponse(SetSpotBean response) {
+                    public void run() {
+                        final AddMarketDialog dialog = AddMarketDialog.newInstance(title, snippet);
+                        dialog.setOnAddMarkerDailogListener(new AddMarketDialog.OnAddMarkerDailogListener() {
+                            @Override
+                            public void onAddMarkerDialogCancelled() {
+                                if (onLocationChangedListener != null)
+                                    onMarkerAddedListener.onMarkerFailed(title, snippet, 3);
+//                                dialog.dismiss();
+                                isAddingMarker = false;
+                            }
 
-                        if (response.getState() == 1) { // 成功
+                            @Override
+                            public void onAddMarkerDialogConfirmed(final String title, final String snippet) {
+                                HashMap<String, String> params = new HashMap<>();
+                                params.put(HttpUtils.Params.USER_ID, String.valueOf(Latitude.getUserInfo().getId()));
+                                params.put(HttpUtils.Params.SPOT_TITLE, title);
+                                params.put(HttpUtils.Params.SPOT_SNIPPET, snippet);
+                                params.put(HttpUtils.Params.LATITUDE, String.valueOf(aMap.getCameraPosition().target.latitude));
+                                params.put(HttpUtils.Params.LONGITUDE, String.valueOf(aMap.getCameraPosition().target.longitude));
+                                params.put(HttpUtils.Params.FORCE, String.valueOf(Latitude.getUserInfo().getForce()));
+
+                                final LatitudeProgressDialog progressDialog = new LatitudeProgressDialog(fragment.getActivity(), fragment.getActivity().getString(R.string.dialog_add_marker_creating));
+                                progressDialog.show();
+
+                                HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.SET_SPOT, params, SetSpotBean.class, new Response.Listener<SetSpotBean>() {
+                                    @Override
+                                    public void onResponse(SetSpotBean response) {
+
+                                        if (response.getState() == 1) { // 成功
 
 //                            aMap.addMarker(getDefaultMarkerOptions(aMap.getCameraPosition().target, Latitude.getUserInfo().getForce()));
 
-                            if (onMarkerAddedListener != null)
-                                onMarkerAddedListener.onMarkerAdded();
+                                            if (onMarkerAddedListener != null)
+                                                onMarkerAddedListener.onMarkerAdded();
 
-                        } else {
+                                        } else {
 
-                            if (onLocationChangedListener != null)
-                                onMarkerAddedListener.onMarkerFailed(title, snippet, response.getState());
+                                            if (onLocationChangedListener != null)
+                                                onMarkerAddedListener.onMarkerFailed(title, snippet, response.getState());
 
-                        }
+                                        }
 
-                        dialog.dismiss();
-                        progressDialog.dismiss();
+//                                        dialog.dismiss();
+                                        progressDialog.dismiss();
+                                        isAddingMarker = false;
+                                    }
+
+                                }, new Response.ErrorListener() {
+                                    @Override
+                                    public void onErrorResponse(VolleyError error) {
+                                        if (onLocationChangedListener != null)
+                                            onMarkerAddedListener.onMarkerFailed(title, snippet, -1);
+
+//                                        dialog.dismiss();
+                                        progressDialog.dismiss();
+                                        isAddingMarker = false;
+                                    }
+                                }));
+
+                            }
+                        });
+                        dialog.show(fragment.getFragmentManager(), "AddMarkerDialog");
                     }
+                }, Constants.ANIM_SLOW_DURATION);
+            }
 
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        if (onLocationChangedListener != null)
-                            onMarkerAddedListener.onMarkerFailed(title, snippet, -1);
-
-                        dialog.dismiss();
-                        progressDialog.dismiss();
-
-                    }
-                }));
-
+            @Override
+            public void onCancel() {
+                if (onLocationChangedListener != null)
+                    onMarkerAddedListener.onMarkerFailed(title, snippet, 3);
+                isAddingMarker = false;
             }
         });
-        dialog.show(fragment.getFragmentManager(), "AddMarkerDialog");
-
-        return false;
     }
 
     @Override
@@ -425,25 +456,47 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                         onMarkerLoadListener.onMarkerStartLoading();
                     }
 
-                    VisibleRegion visibleRegion = aMap.getProjection().getVisibleRegion();
-                    LatLng leftTop = visibleRegion.farLeft;
-                    LatLng rightBottom = visibleRegion.nearRight;
-
-                    Log.e("TAG", String.valueOf(leftTop.latitude) + ", " + String.valueOf(leftTop.longitude));
-                    Log.e("TAG", String.valueOf(rightBottom.latitude) + ", " + String.valueOf(rightBottom.longitude));
                     HashMap<String, String> params = new HashMap<>();
-                    params.put(HttpUtils.Params.LEFT_TOP_LATITUDE, String.valueOf(leftTop.latitude));
-                    params.put(HttpUtils.Params.LEFT_TOP_LONGITUDE, String.valueOf(leftTop.longitude));
-                    params.put(HttpUtils.Params.RIGHT_BOTTOM_LATITUDE, String.valueOf(rightBottom.latitude));
-                    params.put(HttpUtils.Params.RIGHT_BOTTOM_LONGITUDE, String.valueOf(rightBottom.longitude));
+
+
+                    /*
+                    *   加载视图据点
+                    *
+                    * */
+//                    VisibleRegion visibleRegion = aMap.getProjection().getVisibleRegion();
+//                    LatLng leftTop = visibleRegion.farLeft;
+//                    LatLng rightBottom = visibleRegion.nearRight;
+//                    Log.e("TAG", String.valueOf(leftTop.latitude) + ", " + String.valueOf(leftTop.longitude));
+//                    Log.e("TAG", String.valueOf(rightBottom.latitude) + ", " + String.valueOf(rightBottom.longitude));
+//                    params.put(HttpUtils.Params.LEFT_TOP_LATITUDE, String.valueOf(leftTop.latitude));
+//                    params.put(HttpUtils.Params.LEFT_TOP_LONGITUDE, String.valueOf(leftTop.longitude));
+//                    params.put(HttpUtils.Params.RIGHT_BOTTOM_LATITUDE, String.valueOf(rightBottom.latitude));
+//                    params.put(HttpUtils.Params.RIGHT_BOTTOM_LONGITUDE, String.valueOf(rightBottom.longitude));
+
+
+                    /*
+                    *   加载周边据点
+                    *
+                    * */
+
+                    double lat = latestLatLng[0];
+                    double lng = latestLatLng[1];
+                    params.put(HttpUtils.Params.LEFT_TOP_LATITUDE, String.valueOf(lat + Constants.GAMING_SCAN_LATITUDE_RADIUS));
+                    params.put(HttpUtils.Params.RIGHT_BOTTOM_LATITUDE, String.valueOf(lat - Constants.GAMING_SCAN_LATITUDE_RADIUS));
+                    params.put(HttpUtils.Params.LEFT_TOP_LONGITUDE, String.valueOf(lng - Constants.GAMING_SCAN_LONGITUDE_RADIUS));
+                    params.put(HttpUtils.Params.RIGHT_BOTTOM_LONGITUDE, String.valueOf(lng + Constants.GAMING_SCAN_LONGITUDE_RADIUS));
+
+                    Log.e("RequestZone#LeftTop", String.valueOf(params.get(HttpUtils.Params.LEFT_TOP_LATITUDE)) + ", " + String.valueOf(params.get(HttpUtils.Params.LEFT_TOP_LONGITUDE)));
+                    Log.e("RequestZone#RightBottom", String.valueOf(params.get(HttpUtils.Params.RIGHT_BOTTOM_LATITUDE)) + ", " + String.valueOf(params.get(HttpUtils.Params.RIGHT_BOTTOM_LONGITUDE)));
 
                     HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.GET_SPOTS, params, SpotBean[].class, new Response.Listener<SpotBean[]>() {
                         @Override
                         public void onResponse(SpotBean[] response) {
 
-                            for (Marker marker : aMap.getMapScreenMarkers()) {
-                                marker.remove();
-                            }
+                            aMap.clear();
+                            myLocationCenterCircle = aMap.addCircle(new CircleOptions().center(lastFix).radius(1.5d).fillColor(fragment.getResources().getColor(R.color.green_primary)).zIndex(999).strokeWidth(0f));
+                            myLocationRangeCircle = aMap.addCircle(new CircleOptions().center(lastFix).radius(Constants.GAMING_CAPTURE_RANGE).fillColor(fragment.getResources().getColor(R.color.location_green_primary))
+                                    .strokeColor(fragment.getResources().getColor(R.color.location_green_primary_light)).strokeWidth(4f));
 
                             for (int i = 0; i < response.length; i++) {
 
@@ -451,10 +504,11 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
                                 MarkerOptions markerOptions = getDefaultMarkerOptions(new LatLng(spotBean.getLatitude(), spotBean.getLongitude()), spotBean.getForce())
                                         .title(spotBean.getTitle())
-                                        .snippet(spotBean.getSnippet());
+                                        .snippet(spotBean.getSnippet())
+                                        .period(60 * 60 * 1000)
+                                        .draggable(false);
 
                                 aMap.addMarker(markerOptions).setObject(spotBean);
-//                                markerIdToPositionOfSpotBeans.put(aMap.addMarker(markerOptions).getId(), i);
                             }
 
                             isLoadingMarkers = false;
@@ -502,8 +556,8 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
     public void onPause() {
         mapView.onPause();
-        PreferenceUtils.savePreference(PreferenceUtils.KEY_LATITUDE, (float) position[0]);
-        PreferenceUtils.savePreference(PreferenceUtils.KEY_LONGITUDE, (float) position[1]);
+        PreferenceUtils.savePreference(PreferenceUtils.KEY_LATITUDE, (float) latestLatLng[0]);
+        PreferenceUtils.savePreference(PreferenceUtils.KEY_LONGITUDE, (float) latestLatLng[1]);
         locationSource.deactivate();
 //        sensorUnit.release();
     }
@@ -516,6 +570,8 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
     public void onDestroy() {
         mapView.onDestroy();
+        markerForce1.recycle();
+        markerForce2.recycle();
     }
 
     public void onLowMemory() {
@@ -532,17 +588,18 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                 .anchor(0.5f, 0.9f)
                 .position(latLng)
                 .draggable(false)
-                .icon(BitmapDescriptorFactory.fromResource(force == Constants.Force.ONE ? R.drawable.marker_force_1 : R.drawable.marker_force_2));
+                .icon(BitmapDescriptorFactory.fromBitmap(force == Constants.Force.ONE ? markerForce1.copy(markerForce1.getConfig(), false) : markerForce2.copy(markerForce2.getConfig(), false)));
     }
+
 
     @Override
     public void onInfoWindowButtonClicked(Marker marker) {
         if (onCaptureButtonClickedListener != null) {
-//            if (AMapUtils.calculateLineDistance(marker.getPosition(), new LatLng(aMap.getMyLocation().getLatitude(), aMap.getMyLocation().getLongitude())) <= Constants.GAMING_CAPTURE_RANGE) {
-            onCaptureButtonClickedListener.onCaptureButtonClicked(true, marker);
-//            } else {
-//                onCaptureButtonClickedListener.onCaptureButtonClicked(false, marker);
-//            }
+            if (AMapUtils.calculateLineDistance(marker.getPosition(), new LatLng(aMap.getMyLocation().getLatitude(), aMap.getMyLocation().getLongitude())) <= Constants.GAMING_CAPTURE_RANGE) {
+                onCaptureButtonClickedListener.onCaptureButtonClicked(true, marker);
+            } else {
+                onCaptureButtonClickedListener.onCaptureButtonClicked(false, marker);
+            }
         }
     }
 

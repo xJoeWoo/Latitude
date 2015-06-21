@@ -15,6 +15,3 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
-
--keep class android.transitions.everywhere.** { *; }
--keep class android.transitions.everywhere.**.** { *; }

@@ -18,7 +18,7 @@ public class AddMarketDialog extends DialogFragment {
 
     private static final String TITLE = "title";
     private static final String SNIPPET = "snippet";
-    private OnMarkerConfirmedListener onMarkerConfirmedListener;
+    private OnAddMarkerDailogListener onAddMarkerDailogListener;
 
     public static AddMarketDialog newInstance(String title, String snippet) {
         AddMarketDialog fragment = new AddMarketDialog();
@@ -28,6 +28,7 @@ public class AddMarketDialog extends DialogFragment {
         fragment.setArguments(args);
         return fragment;
     }
+
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -54,7 +55,8 @@ public class AddMarketDialog extends DialogFragment {
                     public void onClick(View v) {
                         if (!etTitle.getText().toString().trim().isEmpty()) {
 
-                            onMarkerConfirmedListener.onMarkerConfirmed(etTitle.getText().toString().trim(), etSnippet.getText().toString().trim());
+                            if (onAddMarkerDailogListener != null)
+                                onAddMarkerDailogListener.onAddMarkerDialogConfirmed(etTitle.getText().toString().trim(), etSnippet.getText().toString().trim());
 
                             d.dismiss();
 
@@ -63,18 +65,34 @@ public class AddMarketDialog extends DialogFragment {
                         }
                     }
                 });
+
+                d.getButton(Dialog.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        d.cancel();
+                    }
+                });
             }
         });
 
         return d;
     }
 
-    public void setOnMarkerConfirmedListener(OnMarkerConfirmedListener onMarkerConfirmedListener) {
-        this.onMarkerConfirmedListener = onMarkerConfirmedListener;
+    @Override
+    public void onCancel(DialogInterface dialog) {
+        super.onCancel(dialog);
+        if (onAddMarkerDailogListener != null)
+            onAddMarkerDailogListener.onAddMarkerDialogCancelled();
     }
 
-    public interface OnMarkerConfirmedListener {
-        void onMarkerConfirmed(String title, String snippet);
+    public void setOnAddMarkerDailogListener(OnAddMarkerDailogListener onAddMarkerDailogListener) {
+        this.onAddMarkerDailogListener = onAddMarkerDailogListener;
+    }
+
+    public interface OnAddMarkerDailogListener {
+        void onAddMarkerDialogConfirmed(String title, String snippet);
+
+        void onAddMarkerDialogCancelled();
     }
 
 }

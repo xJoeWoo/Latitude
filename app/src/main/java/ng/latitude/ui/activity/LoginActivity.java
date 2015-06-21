@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -18,6 +19,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -44,7 +46,6 @@ import ng.latitude.support.ui.SelectForceDialog;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private static final boolean DEBUG = false;
 
     private Button btnLogin;
     private Button btnLogon;
@@ -66,7 +67,7 @@ public class LoginActivity extends AppCompatActivity {
         findViews();
         setListeners();
 
-        if (DEBUG) {
+        if (Constants.DEBUG) {
             etAccount.setText("ng");
             etPassword.setText("233");
             btnLogin.performClick();
@@ -85,21 +86,21 @@ public class LoginActivity extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                ObjectAnimator oa = ObjectAnimator.ofFloat(tvLogo, Constants.OBJECT_ANIM_ALPHA, 0f, 1f).setDuration(Constants.LOGIN_LOGO_ANIM_DURATION);
+                ObjectAnimator oa = ObjectAnimator.ofFloat(tvLogo, Constants.OBJECT_ANIM_ALPHA, 0f, 1f).setDuration(Constants.ANIM_LOGIN_LOGO_ANIM_DURATION);
                 oa.setInterpolator(GravityInterpolator.getInstance(true));
                 oa.start();
             }
-        }, Constants.LOGIN_LOGO_DELAY_TIME);
+        }, Constants.ANIM_LOGIN_LOGO_DELAY_TIME);
 
 
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                ObjectAnimator oa = ObjectAnimator.ofFloat(container, Constants.OBJECT_ANIM_ALPHA, 0f, 1f).setDuration(Constants.LOGIN_POP_ANIM_DURATION);
+                ObjectAnimator oa = ObjectAnimator.ofFloat(container, Constants.OBJECT_ANIM_ALPHA, 0f, 1f).setDuration(Constants.ANIM_LOGIN_POP_ANIM_DURATION);
                 oa.setInterpolator(GravityInterpolator.getInstance(true));
                 oa.start();
             }
-        }, Constants.LOGIN_POP_DELAY_TIME);
+        }, Constants.ANIM_LOGIN_POP_DELAY_TIME);
 
     }
 
@@ -119,8 +120,13 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (checkInput())
+                if (checkInput()) {
                     requestLogin();
+
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(etAccount.getWindowToken(), 0);
+                    imm.hideSoftInputFromWindow(etPassword.getWindowToken(), 0);
+                }
             }
         });
 
@@ -321,7 +327,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void setButtonStatus(Button animBtn, boolean status) {
         if (status) {
-            if (animBtn != null) {
+            if (oaBtn != null) {
                 oaBtn.cancel();
             }
 //            oaBtn = ObjectAnimator.ofFloat(animBtn, Constants.OBJECT_ANIM_ALPHA, oaBtnValue, 1f).setDuration(Constants.ANIM_BUTTON_ALPHA_DURATION / 5);
