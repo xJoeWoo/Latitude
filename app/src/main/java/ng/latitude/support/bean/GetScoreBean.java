@@ -5,7 +5,10 @@ import com.google.gson.annotations.SerializedName;
 import ng.latitude.support.network.HttpUtils;
 
 /**
- * Created by Ng on 15/6/20.
+ * Created by Ng on 15/6/20
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class GetScoreBean {
 

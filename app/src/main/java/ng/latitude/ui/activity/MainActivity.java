@@ -10,6 +10,12 @@ import ng.latitude.support.conf.Latitude;
 import ng.latitude.support.ui.SingleFragmentActivity;
 import ng.latitude.ui.fragment.MapFragment;
 
+/**
+ * Created by Ng on 15/5/24
+ * <p>
+ * All Rights Reserved by Ng
+ * Copyright © 2015
+ */
 
 public class MainActivity extends SingleFragmentActivity {
 

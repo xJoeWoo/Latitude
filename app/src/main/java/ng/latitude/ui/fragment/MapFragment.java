@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.Marker;
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -35,11 +36,15 @@ import ng.latitude.support.network.GsonRequest;
 import ng.latitude.support.network.HttpUtils;
 import ng.latitude.support.ui.BottomInfo;
 import ng.latitude.support.ui.GravityInterpolator;
+import ng.latitude.support.ui.InterfaceUtils;
 import ng.latitude.support.ui.ScoreView;
 import ng.latitude.support.ui.SingleFragmentActivity;
 
 /**
- * Created by Ng on 15/6/8.
+ * Created by Ng on 15/6/8
+ * <p>
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListener
         , MapUnit.OnLocationFixListener, SingleFragmentActivity.OnBackPressedListener
@@ -104,7 +109,7 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        mapUtils = new MapUnit(this, rootView.findViewById(R.id.map_main));
+        mapUtils = new MapUnit(this, (MapView) rootView.findViewById(R.id.map_main));
         mapUtils.onCreate(savedInstanceState);
         setListeners();
 
@@ -186,19 +191,18 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     @Override
     public void onMarkerFailed(String title, String snippet, int state) {
 
-        //1 成功，2 失败，0 超过3个点，-1 自定义错误，3 取消
 
         setPosition(false);
 
         switch (state) {
-            case 2:
+            case MapUnit.OnMarkerAddedListener.ERROR_UNKNOWN:
                 Snackbar.make(snackBarLayout, R.string.toast_spot_create_failed, Snackbar.LENGTH_SHORT).show();
                 mapUtils.addMarkerToMap(title, snippet);
                 break;
-            case 0:
+            case MapUnit.OnMarkerAddedListener.ERROR_MORE_THAN_THREE_SPOTS:
                 Snackbar.make(snackBarLayout, R.string.toast_spot_over_limit, Snackbar.LENGTH_LONG).show();
                 break;
-            case 3:
+            case MapUnit.OnMarkerAddedListener.CANCELLED:
                 break;
             default:
                 Snackbar.make(snackBarLayout, R.string.toast_network_error, Snackbar.LENGTH_SHORT).show();
@@ -260,7 +264,7 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
 
     private void startSetPositionAnim(final boolean visible) {
         float transY = rootView.findViewById(R.id.rv_main).getHeight() - ivSetPosition.getY();
-        final ObjectAnimator oa = ObjectAnimator.ofFloat(ivSetPosition, Constants.OBJECT_ANIM_TRANSLATION_Y, visible ? transY : 0, 0).setDuration(Constants.ANIM_SLOW_DURATION);
+        final ObjectAnimator oa = ObjectAnimator.ofFloat(ivSetPosition, InterfaceUtils.AnimPropertyName.TRANSLATION_Y, visible ? transY : 0, 0).setDuration(Constants.ANIM_SLOW_DURATION);
         oa.setInterpolator(GravityInterpolator.getInstance(visible));
         oa.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -277,7 +281,7 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
             }
         });
         oa.start();
-        ObjectAnimator.ofFloat(ivSetPosition, Constants.OBJECT_ANIM_ALPHA, visible ? 0f : 1f, visible ? 1f : 0f).setDuration(Constants.ANIM_SLOW_DURATION).start();
+        ObjectAnimator.ofFloat(ivSetPosition, InterfaceUtils.AnimPropertyName.ALPHA, visible ? 0f : 1f, visible ? 1f : 0f).setDuration(Constants.ANIM_SLOW_DURATION).start();
     }
 
     @Override
@@ -321,8 +325,9 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
         super.onPause();
         mapUtils.onPause();
 
-        handler.removeCallbacks(refreshScoreRunnable);
-        handler.removeCallbacks(refreshSpotsRunnable);
+//        handler.removeCallbacks(refreshScoreRunnable);
+//        handler.removeCallbacks(refreshSpotsRunnable);
+        handler.removeCallbacksAndMessages(null);
     }
 
     @Override
@@ -383,15 +388,15 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     public void onSpotForceChanged(int state, Marker marker) {
 
         switch (state) {
-            case 1:
+            case MapUnit.OnSpotForceChangedListener.SUCCEEDED:
 //                mapUtils.changeSpotForce(spotId, Latitude.getUserInfo().getForce());
                 Snackbar.make(snackBarLayout, R.string.toast_spot_capture_succeed, Snackbar.LENGTH_LONG).show();
                 updateScore(scoreView);
                 break;
-            case 0:
+            case MapUnit.OnSpotForceChangedListener.FAILED:
                 Snackbar.make(snackBarLayout, R.string.toast_spot_capture_failed, Snackbar.LENGTH_SHORT).show();
                 break;
-            case -1:
+            case MapUnit.OnSpotForceChangedListener.ERROR_NETWORK:
                 Snackbar.make(snackBarLayout, R.string.toast_network_error, Snackbar.LENGTH_SHORT).show();
                 break;
         }

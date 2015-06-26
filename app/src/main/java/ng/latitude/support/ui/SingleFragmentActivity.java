@@ -9,7 +9,10 @@ import android.support.v7.app.AppCompatActivity;
 import ng.latitude.R;
 
 /**
- * Created by Ng on 15/6/8.
+ * Created by Ng on 15/6/8
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public abstract class SingleFragmentActivity extends AppCompatActivity {
 

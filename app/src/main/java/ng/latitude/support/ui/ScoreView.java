@@ -10,9 +10,17 @@ import android.widget.TextView;
 
 import ng.latitude.R;
 import ng.latitude.support.conf.Latitude;
+import ng.latitude.support.conf.UserInfo;
 
 /**
- * Created by Ng on 15/6/20.
+ * Created by Ng on 15/6/20
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
+ */
+
+/**
+ * 在 {@link Toolbar} 中的分数控制器
  */
 public class ScoreView {
 
@@ -41,6 +49,10 @@ public class ScoreView {
         downIn.setInterpolator(GravityInterpolator.getInstance(true));
     }
 
+    /**
+     * 更新分数，更新前请使用 {@link Latitude#getUserInfo()} 获取 {@link UserInfo} 后，
+     * 用 {@link UserInfo#setForceScore(int)} 及 {@link UserInfo#setPlayerScore(int)} 设置分数
+     */
     public void updateScore() {
 
         int oldPlayerScore = Integer.parseInt(isPlayerScoreInit ? tvPlayer.getText().toString() : "0");
@@ -85,6 +97,13 @@ public class ScoreView {
         first.start();
     }
 
+    /**
+     * 延迟更新阵营分数更好看一些啦
+     *
+     * @param v
+     * @param score
+     * @param isIncreased
+     */
     private void setScoreDelay(final TextView v, final int score, final boolean isIncreased) {
         handler.postDelayed(new Runnable() {
             @Override

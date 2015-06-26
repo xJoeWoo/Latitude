@@ -15,7 +15,10 @@ import ng.latitude.support.conf.Constants;
 import ng.latitude.support.conf.Latitude;
 
 /**
- * Created by Joe on 2015/5/26.
+ * Created by Ng on 15/5/26
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class InfoWindowAdapter implements AMap.InfoWindowAdapter {
 

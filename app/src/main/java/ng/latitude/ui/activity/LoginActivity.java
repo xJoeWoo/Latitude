@@ -17,7 +17,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.animation.LinearInterpolator;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -41,11 +40,16 @@ import ng.latitude.support.conf.PreferenceUtils;
 import ng.latitude.support.network.GsonRequest;
 import ng.latitude.support.network.HttpUtils;
 import ng.latitude.support.ui.GravityInterpolator;
+import ng.latitude.support.ui.InterfaceUtils;
 import ng.latitude.support.ui.SelectForceDialog;
 
-
+/**
+ * Created by Ng on 15/5/24
+ * <p>
+ * All Rights Reserved by Ng
+ * Copyright © 2015
+ */
 public class LoginActivity extends AppCompatActivity {
-
 
     private Button btnLogin;
     private Button btnLogon;
@@ -53,11 +57,8 @@ public class LoginActivity extends AppCompatActivity {
     private EditText etPassword;
     private EditText etName;
     private EditText etPasswordConfirm;
-    private CoordinatorLayout snackbarLayout;
+    private CoordinatorLayout snackBarLayout;
     private RelativeLayout container;
-
-    private ObjectAnimator oaBtn;
-    private float oaBtnValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,10 +84,11 @@ public class LoginActivity extends AppCompatActivity {
 
         final Handler handler = new Handler();
 
+
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                ObjectAnimator oa = ObjectAnimator.ofFloat(tvLogo, Constants.OBJECT_ANIM_ALPHA, 0f, 1f).setDuration(Constants.ANIM_LOGIN_LOGO_ANIM_DURATION);
+                ObjectAnimator oa = ObjectAnimator.ofFloat(tvLogo, InterfaceUtils.AnimPropertyName.ALPHA, 0f, 1f).setDuration(Constants.ANIM_LOGIN_LOGO_ANIM_DURATION);
                 oa.setInterpolator(GravityInterpolator.getInstance(true));
                 oa.start();
             }
@@ -96,14 +98,13 @@ public class LoginActivity extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                ObjectAnimator oa = ObjectAnimator.ofFloat(container, Constants.OBJECT_ANIM_ALPHA, 0f, 1f).setDuration(Constants.ANIM_LOGIN_POP_ANIM_DURATION);
+                ObjectAnimator oa = ObjectAnimator.ofFloat(container, InterfaceUtils.AnimPropertyName.ALPHA, 0f, 1f).setDuration(Constants.ANIM_LOGIN_POP_ANIM_DURATION);
                 oa.setInterpolator(GravityInterpolator.getInstance(true));
                 oa.start();
             }
         }, Constants.ANIM_LOGIN_POP_DELAY_TIME);
 
     }
-
 
     private void findViews() {
         btnLogin = (Button) findViewById(R.id.btn_login);
@@ -112,7 +113,7 @@ public class LoginActivity extends AppCompatActivity {
         etPassword = (EditText) findViewById(R.id.et_login_password);
         etPasswordConfirm = (EditText) findViewById(R.id.et_login_password_confirm);
         etName = (EditText) findViewById(R.id.et_login_name);
-        snackbarLayout = (CoordinatorLayout) findViewById(R.id.snb_login);
+        snackBarLayout = (CoordinatorLayout) findViewById(R.id.snb_login);
         container = (RelativeLayout) findViewById(R.id.login_pop_container);
     }
 
@@ -161,6 +162,9 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 开始登录网络请求
+     */
     private void requestLogin() {
 
         setButtonStatus(btnLogin, false);
@@ -189,12 +193,15 @@ public class LoginActivity extends AppCompatActivity {
                     }).setNegativeButton(android.R.string.cancel, null).show();
                 } else {
 //                    Toast.makeText(LoginActivity.this, R.string.toast_network_error, Toast.LENGTH_SHORT).show();
-                    Snackbar.make(snackbarLayout, R.string.toast_network_error, Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(snackBarLayout, R.string.toast_network_error, Snackbar.LENGTH_LONG).show();
                 }
             }
         }));
     }
 
+    /**
+     * 开始注册网络请求
+     */
     private void requestLogon() {
 
         if (etPasswordConfirm.getVisibility() == View.VISIBLE) { // 展开后
@@ -212,7 +219,7 @@ public class LoginActivity extends AppCompatActivity {
                     HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.LOGON, params, LogonBean.class, new Response.Listener<LogonBean>() {
                         @Override
                         public void onResponse(LogonBean response) {
-                            Snackbar.make(snackbarLayout, R.string.toast_logon_succeed, Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(snackBarLayout, R.string.toast_logon_succeed, Snackbar.LENGTH_LONG).show();
 //                            setButtonStatus(true);
                             requestLogin();
                         }
@@ -221,7 +228,7 @@ public class LoginActivity extends AppCompatActivity {
                         public void onErrorResponse(VolleyError error) {
                             setButtonStatus(true);
                             error.printStackTrace();
-                            Snackbar.make(snackbarLayout, R.string.toast_logon_failed, Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(snackBarLayout, R.string.toast_logon_failed, Snackbar.LENGTH_LONG).show();
                         }
                     }));
                 }
@@ -244,7 +251,6 @@ public class LoginActivity extends AppCompatActivity {
             btnLayoutParams.addRule(RelativeLayout.RIGHT_OF, 0);
             btnLogon.setLayoutParams(btnLayoutParams);
 
-
             ValueAnimator va = ValueAnimator.ofFloat(0f, 1f);
             va.setInterpolator(GravityInterpolator.getInstance(true));
             va.setDuration(Constants.ANIM_COMMON_DURATION);
@@ -259,21 +265,15 @@ public class LoginActivity extends AppCompatActivity {
 
                     btnLogon.setWidth((int) (oriBtnWidth + (targetBtnWidth - oriBtnWidth) * (float) animation.getAnimatedValue()));
                     btnLogin.setAlpha(1 - (float) animation.getAnimatedValue());
-
                 }
             });
             va.addListener(new AnimatorListenerAdapter() {
                 @Override
-                public void onAnimationStart(Animator animation) {
-
-                }
-
-                @Override
                 public void onAnimationEnd(Animator animation) {
                     etName.setVisibility(View.VISIBLE);
                     etPasswordConfirm.setVisibility(View.VISIBLE);
-                    ObjectAnimator.ofFloat(etName, Constants.OBJECT_ANIM_ALPHA, 0f, 1f).setDuration(Constants.ANIM_COMMON_DURATION).start();
-                    ObjectAnimator.ofFloat(etPasswordConfirm, Constants.OBJECT_ANIM_ALPHA, 0f, 1f).setDuration(Constants.ANIM_COMMON_DURATION).start();
+                    ObjectAnimator.ofFloat(etName, InterfaceUtils.AnimPropertyName.ALPHA, 0f, 1f).setDuration(Constants.ANIM_COMMON_DURATION).start();
+                    ObjectAnimator.ofFloat(etPasswordConfirm, InterfaceUtils.AnimPropertyName.ALPHA, 0f, 1f).setDuration(Constants.ANIM_COMMON_DURATION).start();
 
                     btnLogin.setVisibility(View.GONE);
                     btnLogon.setTextColor(getResources().getColor(R.color.green_primary));
@@ -283,10 +283,13 @@ public class LoginActivity extends AppCompatActivity {
             });
             va.start();
         }
-
-
     }
 
+    /**
+     * 获取输入结果，请先使用 {@link #checkInput()} 检查输入合法性
+     *
+     * @return 保存有帐号、密码（如果注册的话还保存有名字）的 {@link HashMap}
+     */
     private Map<String, String> getInput() {
         HashMap<String, String> map = new HashMap<>();
         map.put(HttpUtils.Params.ACCOUNT, etAccount.getText().toString().trim());
@@ -297,6 +300,10 @@ public class LoginActivity extends AppCompatActivity {
         return map;
     }
 
+    /**
+     * 检查输入并摇动存在不合法输入的 {@link EditText}
+     * @return {@code true} 为全部输入正确， {@code false} 为有输入错误
+     */
     private boolean checkInput() {
         if (!etAccount.getText().toString().trim().isEmpty() && !etPassword.getText().toString().trim().isEmpty()
                 && (etPasswordConfirm.getVisibility() == View.GONE || (etPasswordConfirm.getVisibility() == View.VISIBLE && etPasswordConfirm.getText().toString().trim().equals(etPassword.getText().toString().trim())))
@@ -304,22 +311,20 @@ public class LoginActivity extends AppCompatActivity {
             return true;
         } else {
             if (etAccount.getText().toString().trim().isEmpty())
-                Latitude.shakeEditText(etAccount, false);
+                InterfaceUtils.shakeEditText(etAccount, false);
 
             if (etPassword.getText().toString().trim().isEmpty())
-                Latitude.shakeEditText(etPassword, false);
+                InterfaceUtils.shakeEditText(etPassword, false);
 
             if (!etPasswordConfirm.getText().toString().trim().equals(etPassword.getText().toString().trim()))
-                Latitude.shakeEditText(etPasswordConfirm, true);
+                InterfaceUtils.shakeEditText(etPasswordConfirm, true);
 
             if (etName.getText().toString().trim().isEmpty())
-                Latitude.shakeEditText(etName, false);
-
+                InterfaceUtils.shakeEditText(etName, false);
 
             return false;
         }
     }
-
 
     private void setButtonStatus(boolean status) {
         setButtonStatus(null, status);
@@ -327,32 +332,14 @@ public class LoginActivity extends AppCompatActivity {
 
     private void setButtonStatus(Button animBtn, boolean status) {
         if (status) {
-            if (oaBtn != null) {
-                oaBtn.cancel();
-            }
-//            oaBtn = ObjectAnimator.ofFloat(animBtn, Constants.OBJECT_ANIM_ALPHA, oaBtnValue, 1f).setDuration(Constants.ANIM_BUTTON_ALPHA_DURATION / 5);
-//            oaBtn.setInterpolator(new GravityInterpolator(true));
-//            oaBtn.start();
-
-            btnLogin.setAlpha(1f);
+            InterfaceUtils.blinkView(animBtn, false);
 
             btnLogon.setClickable(true);
             btnLogin.setClickable(true);
 
         } else {
-            if (animBtn != null) {
-                oaBtn = ObjectAnimator.ofFloat(animBtn, Constants.OBJECT_ANIM_ALPHA, 1f, 0f).setDuration(Constants.ANIM_BUTTON_ALPHA_DURATION);
-                oaBtn.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animation) {
-                        oaBtnValue = (float) animation.getAnimatedValue();
-                    }
-                });
-                oaBtn.setInterpolator(new LinearInterpolator());
-                oaBtn.setRepeatMode(ObjectAnimator.REVERSE);
-                oaBtn.setRepeatCount(ObjectAnimator.INFINITE);
-                oaBtn.start();
-            }
+
+            InterfaceUtils.blinkView(animBtn, true);
 
             btnLogon.setClickable(false);
             btnLogin.setClickable(false);

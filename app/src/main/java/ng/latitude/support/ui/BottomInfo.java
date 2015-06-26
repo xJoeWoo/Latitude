@@ -17,7 +17,10 @@ import ng.latitude.R;
 import ng.latitude.support.conf.Constants;
 
 /**
- * Created by Ng on 15/6/3.
+ * Created by Ng on 15/6/3
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class BottomInfo extends RelativeLayout {
 
@@ -101,7 +104,7 @@ public class BottomInfo extends RelativeLayout {
     }
 
     public void startBlink() {
-        oa = ObjectAnimator.ofFloat(main, Constants.OBJECT_ANIM_ALPHA, 1f, 0f).setDuration((long) (Constants.ANIM_BUTTON_ALPHA_DURATION * 1.5));
+        oa = ObjectAnimator.ofFloat(main, InterfaceUtils.AnimPropertyName.ALPHA, 1f, 0f).setDuration((long) (Constants.ANIM_BUTTON_ALPHA_DURATION * 1.5));
         oa.setInterpolator(new LinearInterpolator());
         oa.setRepeatCount(ValueAnimator.INFINITE);
         oa.setRepeatMode(ValueAnimator.REVERSE);

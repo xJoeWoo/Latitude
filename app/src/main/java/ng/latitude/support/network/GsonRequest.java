@@ -18,7 +18,10 @@ import java.util.Map;
 import ng.latitude.support.conf.Constants;
 
 /**
- * Created by Ng on 15/5/31.
+ * Created by Ng on 15/5/31
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class GsonRequest<T> extends Request<T> {
     private final Gson gson = new Gson();

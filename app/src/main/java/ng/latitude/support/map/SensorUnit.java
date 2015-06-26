@@ -13,7 +13,10 @@ import ng.latitude.support.conf.Constants;
 import ng.latitude.support.conf.Latitude;
 
 /**
- * Created by Ng on 15/6/13.
+ * Created by Ng on 15/6/13
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class SensorUnit implements SensorEventListener {
 

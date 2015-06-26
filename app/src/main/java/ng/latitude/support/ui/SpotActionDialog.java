@@ -3,7 +3,10 @@ package ng.latitude.support.ui;
 import android.app.DialogFragment;
 
 /**
- * Created by Ng on 15/6/18.
+ * Created by Ng on 15/6/18
+ * <p>
+ * All Rights Reserved by Ng<br>
+ * Copyright © 2015
  */
 public class SpotActionDialog extends DialogFragment {
 

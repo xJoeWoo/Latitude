@@ -8,7 +8,10 @@ import com.google.gson.annotations.SerializedName;
 import ng.latitude.support.network.HttpUtils;
 
 /**
- * Created by Ng on 15/6/15.
+ * Created by Ng on 15/6/15
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class SpotBean implements Parcelable {
 

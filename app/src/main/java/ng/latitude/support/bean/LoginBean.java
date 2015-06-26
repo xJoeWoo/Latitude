@@ -5,7 +5,10 @@ import com.google.gson.annotations.SerializedName;
 import ng.latitude.support.network.HttpUtils;
 
 /**
- * Created by Ng on 15/5/31.
+ * Created by Ng on 15/5/31
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class LoginBean {
 
@@ -26,6 +29,10 @@ public class LoginBean {
         return playerScore;
     }
 
+    /**
+     * @param playerScore
+     * @hide
+     */
     public void setPlayerScore(int playerScore) {
         this.playerScore = playerScore;
     }

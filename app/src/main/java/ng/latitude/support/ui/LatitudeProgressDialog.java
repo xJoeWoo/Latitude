@@ -4,7 +4,10 @@ import android.app.ProgressDialog;
 import android.content.Context;
 
 /**
- * Created by Ng on 15/6/18.
+ * Created by Ng on 15/6/18
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class LatitudeProgressDialog extends ProgressDialog {
 
@@ -16,6 +19,4 @@ public class LatitudeProgressDialog extends ProgressDialog {
         setCanceledOnTouchOutside(false);
         setMessage(info);
     }
-
-
 }

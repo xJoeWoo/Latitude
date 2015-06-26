@@ -6,19 +6,22 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 
 import ng.latitude.R;
-import ng.latitude.support.conf.Latitude;
 
 /**
- * Created by Ng on 15/6/15.
+ * Created by Ng on 15/6/15
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class AddMarketDialog extends DialogFragment {
 
     private static final String TITLE = "title";
     private static final String SNIPPET = "snippet";
-    private OnAddMarkerDailogListener onAddMarkerDailogListener;
+    private OnAddMarkerDialogListener onAddMarkerDialogListener;
 
     public static AddMarketDialog newInstance(String title, String snippet) {
         AddMarketDialog fragment = new AddMarketDialog();
@@ -55,13 +58,13 @@ public class AddMarketDialog extends DialogFragment {
                     public void onClick(View v) {
                         if (!etTitle.getText().toString().trim().isEmpty()) {
 
-                            if (onAddMarkerDailogListener != null)
-                                onAddMarkerDailogListener.onAddMarkerDialogConfirmed(etTitle.getText().toString().trim(), etSnippet.getText().toString().trim());
+                            if (onAddMarkerDialogListener != null)
+                                onAddMarkerDialogListener.onAddMarkerDialogConfirmed(etTitle.getText().toString().trim(), etSnippet.getText().toString().trim(), (Button) v);
 
                             d.dismiss();
 
                         } else {
-                            Latitude.shakeEditText(etTitle, false);
+                            InterfaceUtils.shakeEditText(etTitle, false);
                         }
                     }
                 });
@@ -81,17 +84,35 @@ public class AddMarketDialog extends DialogFragment {
     @Override
     public void onCancel(DialogInterface dialog) {
         super.onCancel(dialog);
-        if (onAddMarkerDailogListener != null)
-            onAddMarkerDailogListener.onAddMarkerDialogCancelled();
+        if (onAddMarkerDialogListener != null)
+            onAddMarkerDialogListener.onAddMarkerDialogCancelled();
     }
 
-    public void setOnAddMarkerDailogListener(OnAddMarkerDailogListener onAddMarkerDailogListener) {
-        this.onAddMarkerDailogListener = onAddMarkerDailogListener;
+    public void blankPositiveButton(boolean isBlanking) {
+
     }
 
-    public interface OnAddMarkerDailogListener {
-        void onAddMarkerDialogConfirmed(String title, String snippet);
+    public void setOnAddMarkerDialogListener(OnAddMarkerDialogListener onAddMarkerDialogListener) {
+        this.onAddMarkerDialogListener = onAddMarkerDialogListener;
+    }
 
+    /**
+     * {@link AddMarketDialog} 的添加据点确认、取消事件监听器
+     */
+    public interface OnAddMarkerDialogListener {
+
+        /**
+         * 用户确认添加据点
+         *
+         * @param title   将添加据点的标题
+         * @param snippet 将添加据点的描述
+         * @param btn     占领按钮实例
+         */
+        void onAddMarkerDialogConfirmed(String title, String snippet, Button btn);
+
+        /**
+         * 用户取消添加据点
+         */
         void onAddMarkerDialogCancelled();
     }
 

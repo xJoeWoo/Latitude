@@ -16,7 +16,10 @@ import ng.latitude.R;
 import ng.latitude.support.conf.Constants;
 
 /**
- * Created by Joe on 2015/5/26.
+ * Created by Ng on 15/5/26
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class BottomButtons extends RelativeLayout {
 

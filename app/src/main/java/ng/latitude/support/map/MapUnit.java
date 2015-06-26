@@ -2,14 +2,12 @@ package ng.latitude.support.map;
 
 import android.app.Fragment;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.View;
+import android.widget.Button;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationListener;
@@ -50,15 +48,17 @@ import ng.latitude.support.conf.PreferenceUtils;
 import ng.latitude.support.network.GsonRequest;
 import ng.latitude.support.network.HttpUtils;
 import ng.latitude.support.ui.AddMarketDialog;
+import ng.latitude.support.ui.InterfaceUtils;
 import ng.latitude.support.ui.LatitudeProgressDialog;
 
 /**
- * Created by Ng on 15/6/13.
+ * Created by Ng on 15/6/13
+ * <p>
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowAdapter.OnInfoWindowButtonClickedListener {
 
-    private final Bitmap markerForce1 = BitmapFactory.decodeResource(Latitude.getContext().getResources(), R.drawable.marker_force_1);
-    private final Bitmap markerForce2 = BitmapFactory.decodeResource(Latitude.getContext().getResources(), R.drawable.marker_force_2);
     private final MapView mapView;
     private final Fragment fragment;
     private AMap aMap;
@@ -82,6 +82,11 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
     private boolean isLoadingMarkers = false;
     private boolean isRanBefore = false;
     private boolean isAddingMarker = false;
+    private boolean isFirstFix = true;
+
+    /**
+     * 设备位置改变监听
+     */
     private AMapLocationListener aMapLocationListener = new AMapLocationListener() {
         @Override
         public void onLocationChanged(AMapLocation aLocation) {
@@ -109,7 +114,12 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
 
 //            aLocation.setBearing(360 - heading); // ALocation为顺时针计数
-                aLocation.setAccuracy(Constants.GAMING_CAPTURE_RANGE); // 范围圈
+//                aLocation.setAccuracy(Constants.GAMING_CAPTURE_RANGE); // 范围圈
+
+                if (isFirstFix) {
+                    aMap.animateCamera(CameraUpdateFactory.changeLatLng(currentFix), Constants.ANIM_SLOW_DURATION, null);
+                    isFirstFix = false;
+                }
 
                 Log.e("onLocationChanged", String.format("%s: %f %f\tbearing: %f", aLocation.getProvider(), aLocation.getLatitude(), aLocation.getLongitude(), aLocation.getBearing()));
 
@@ -157,6 +167,10 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
         }
     };
+
+    /**
+     * 管理 {@code GPS} 开关
+     */
     private LocationSource locationSource = new LocationSource() {
         @Override
         public void activate(OnLocationChangedListener listener) {
@@ -177,9 +191,15 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
         }
     };
 
-    public MapUnit(Fragment fragment, View view) {
+    /**
+     * 初始化 {@link MapUnit}
+     *
+     * @param fragment 拥有 {@link MapView} 的 {@link Fragment}
+     * @param view     需要控制的 {@link MapView}
+     */
+    public MapUnit(Fragment fragment, MapView view) {
 
-        this.mapView = (MapView) view;
+        this.mapView = view;
         this.fragment = fragment;
 
         sensorUnit = new SensorUnit(this.fragment.getActivity());
@@ -195,10 +215,10 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
         if (aMap == null) {
             aMap = mapView.getMap();
 
-            /*
-            *   地图加载成功监听
-            *
-            * */
+
+            /**
+             * 地图加载成功监听
+             */
             aMap.setOnMapLoadedListener(new OnMapLoadedListener() { // 设置amap加载成功事件监听器
                 @Override
                 public void onMapLoaded() {
@@ -209,10 +229,10 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                 }
             });
 
-            /*
-            *   Marker点击监听
-            *
-            * */
+
+            /**
+             * Marker点击监听
+             */
             aMap.setOnMarkerClickListener(new OnMarkerClickListener() {
                 @Override
                 public boolean onMarkerClick(Marker marker) { // 设置点击marker事件监听器
@@ -223,10 +243,9 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
             });
 
 
-            /*
-            *   地图点击监听
-            *
-            * */
+            /**
+             * 地图点击监听
+             */
             aMap.setOnMapClickListener(new OnMapClickListener() {
                 @Override
                 public void onMapClick(LatLng latLng) {
@@ -234,10 +253,9 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                 }
             });
 
-            /*
-            *   视图改变监听
-            *
-            * */
+            /**
+             * 视图改变监听
+             */
             aMap.setOnCameraChangeListener(new OnCameraChangeListener() {
                 @Override
                 public void onCameraChange(CameraPosition cameraPosition) {
@@ -258,29 +276,28 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                 }
             });
 
-            /*
-            *   定位监听
-            *
-            * */
+            /**
+             * 定位监听
+             */
             aMap.setLocationSource(locationSource);
 
+            /**
+             * 设置显示样式
+             */
             aMap.setInfoWindowAdapter(new InfoWindowAdapter().setOnInfoWindowButtonClickedListener(this));// 设置自定义InfoWindow样式
-
-
             MyLocationStyle myLocationStyle = new MyLocationStyle();
             myLocationStyle.myLocationIcon(BitmapDescriptorFactory.fromResource(R.drawable.transperant));// 设置小蓝点的图标
             // myLocationStyle.anchor(int,int)//设置小蓝点的锚点
             myLocationStyle.radiusFillColor(this.fragment.getResources().getColor(android.R.color.transparent));// 设置圆形的填充颜色
             myLocationStyle.strokeWidth(0);// 设置圆形的边框粗细
-
             aMap.setMyLocationStyle(myLocationStyle);
             aMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
             aMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);//设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种
             aMap.getUiSettings().setZoomPosition(AMapOptions.ZOOM_POSITION_RIGHT_CENTER);// 缩放按钮位置
-            aMap.getUiSettings().setTiltGesturesEnabled(false);
+            aMap.getUiSettings().setTiltGesturesEnabled(false); // 设置是否开启倾斜地图手势
             aMap.getUiSettings().setMyLocationButtonEnabled(true);// 设置默认定位按钮是否显示
-            aMap.getUiSettings().setCompassEnabled(true);// 指南针
-            aMap.showMapText(false);
+            aMap.getUiSettings().setCompassEnabled(true);// 设置是否显示指南针
+            aMap.showMapText(false); // 设置是否显示地图路名等信息
 //            aMap.setMapType(AMap.MAP_TYPE_SATELLITE);// 设置地图底图
 
         }
@@ -288,26 +305,57 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
     }
 
+    /**
+     * 设置设备位置改变事件监听
+     *
+     * @param onLocationFixListener 位置改变事件监听器
+     */
     public void setOnLocationFixListener(OnLocationFixListener onLocationFixListener) {
         this.onLocationFixListener = onLocationFixListener;
     }
 
+    /**
+     * 设置 {@link Marker} 添加事件监听
+     *
+     * @param onMarkerAddedListener {@link Marker} 添加事件监听器
+     */
     public void setOnMarkerAddedListener(OnMarkerAddedListener onMarkerAddedListener) {
         this.onMarkerAddedListener = onMarkerAddedListener;
     }
 
+    /**
+     * 设置据点“占领”按钮点击事件监听
+     *
+     * @param onCaptureButtonClickedListener “占领”按钮点击事件监听器
+     */
     public void setOnCaptureButtonClickedListener(OnCaptureButtonClickedListener onCaptureButtonClickedListener) {
         this.onCaptureButtonClickedListener = onCaptureButtonClickedListener;
     }
 
+    /**
+     * 设置据点加载完成事件监听
+     *
+     * @param onMarkerLoadListener 据点加载完成事件监听器
+     */
     public void setOnMarkerLoadListener(OnMarkerLoadListener onMarkerLoadListener) {
         this.onMarkerLoadListener = onMarkerLoadListener;
     }
 
+    /**
+     * 设置据点阵营改变事件监听
+     *
+     * @param onSpotForceChangedListener 据点阵营改变事件监听器
+     */
     public void setOnSpotForceChangedListener(OnSpotForceChangedListener onSpotForceChangedListener) {
         this.onSpotForceChangedListener = onSpotForceChangedListener;
     }
 
+    /**
+     * 更变特定 {@link Marker} 的阵营
+     *
+     * @param marker 需要改变阵营的 {@link Marker}
+     * @param force  需要改变的阵营，从 {@link ng.latitude.support.conf.Constants.Force} 中选择
+     */
     public void changeSpotForce(final Marker marker, final int force) {
 
         final SpotBean spotBean = (SpotBean) marker.getObject();
@@ -324,13 +372,13 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
             @Override
             public void onResponse(CaptureSpotBean response) {
                 if (response.getState() == 1) {
-                    onSpotForceChangedListener.onSpotForceChanged(1, marker);
+                    onSpotForceChangedListener.onSpotForceChanged(OnSpotForceChangedListener.SUCCEEDED, marker);
 
                     spotBean.setForce(Latitude.getUserInfo().getForce());
                     marker.setIcon(BitmapDescriptorFactory.fromResource(force == Constants.Force.ONE ? R.drawable.marker_force_1 : R.drawable.marker_force_2));
 
                 } else
-                    onSpotForceChangedListener.onSpotForceChanged(0, marker);
+                    onSpotForceChangedListener.onSpotForceChanged(OnSpotForceChangedListener.FAILED, marker);
 
                 progressDialog.dismiss();
 
@@ -340,37 +388,53 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
             @Override
             public void onErrorResponse(VolleyError error) {
 
-                onSpotForceChangedListener.onSpotForceChanged(-1, marker);
+                onSpotForceChangedListener.onSpotForceChanged(OnSpotForceChangedListener.ERROR_NETWORK, marker);
 
                 progressDialog.dismiss();
             }
         }));
     }
 
+    /**
+     * 添加 {@link Marker} 到地图上，将弹出 {@link AddMarketDialog} ，且 {@link AddMarketDialog} 中数据为空
+     */
     public void addMarkerToMap() {
         addMarkerToMap(null, null);
     }
 
+    /**
+     * 添加 {@link Marker} 到地图上，将弹出 {@link AddMarketDialog} ，且 {@link AddMarketDialog} 中数据为指定数据
+     *
+     * @param title   显示在 {@link AddMarketDialog} 中的标题
+     * @param snippet 显示在 {@link AddMarketDialog} 中的描述
+     */
     public void addMarkerToMap(final String title, final String snippet) {
         isAddingMarker = true;
         aMap.animateCamera(CameraUpdateFactory.changeLatLng(lastFix), Constants.ANIM_SLOW_DURATION, new AMap.CancelableCallback() {
+
+            /**
+             * 地图动画移动到当前所在点完成
+             */
             @Override
             public void onFinish() {
+
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
+
                         final AddMarketDialog dialog = AddMarketDialog.newInstance(title, snippet);
-                        dialog.setOnAddMarkerDailogListener(new AddMarketDialog.OnAddMarkerDailogListener() {
+                        dialog.setOnAddMarkerDialogListener(new AddMarketDialog.OnAddMarkerDialogListener() {
                             @Override
                             public void onAddMarkerDialogCancelled() {
                                 if (onLocationChangedListener != null)
-                                    onMarkerAddedListener.onMarkerFailed(title, snippet, 3);
+                                    onMarkerAddedListener.onMarkerFailed(title, snippet, OnMarkerAddedListener.CANCELLED);
 //                                dialog.dismiss();
                                 isAddingMarker = false;
                             }
 
                             @Override
-                            public void onAddMarkerDialogConfirmed(final String title, final String snippet) {
+                            public void onAddMarkerDialogConfirmed(final String title, final String snippet, final Button btn) {
+
                                 HashMap<String, String> params = new HashMap<>();
                                 params.put(HttpUtils.Params.USER_ID, String.valueOf(Latitude.getUserInfo().getId()));
                                 params.put(HttpUtils.Params.SPOT_TITLE, title);
@@ -379,8 +443,10 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                                 params.put(HttpUtils.Params.LONGITUDE, String.valueOf(aMap.getCameraPosition().target.longitude));
                                 params.put(HttpUtils.Params.FORCE, String.valueOf(Latitude.getUserInfo().getForce()));
 
-                                final LatitudeProgressDialog progressDialog = new LatitudeProgressDialog(fragment.getActivity(), fragment.getActivity().getString(R.string.dialog_add_marker_creating));
-                                progressDialog.show();
+                                InterfaceUtils.blinkView(btn, true);
+
+//                                final LatitudeProgressDialog progressDialog = new LatitudeProgressDialog(fragment.getActivity(), fragment.getActivity().getString(R.string.dialog_add_marker_creating));
+//                                progressDialog.show();
 
                                 HttpUtils.getRequestQueue().add(new GsonRequest<>(Request.Method.POST, HttpUtils.Urls.SET_SPOT, params, SetSpotBean.class, new Response.Listener<SetSpotBean>() {
                                     @Override
@@ -401,7 +467,8 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                                         }
 
 //                                        dialog.dismiss();
-                                        progressDialog.dismiss();
+//                                        progressDialog.dismiss();
+                                        InterfaceUtils.blinkView(btn, false);
                                         isAddingMarker = false;
                                     }
 
@@ -409,10 +476,11 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                                     @Override
                                     public void onErrorResponse(VolleyError error) {
                                         if (onLocationChangedListener != null)
-                                            onMarkerAddedListener.onMarkerFailed(title, snippet, -1);
+                                            onMarkerAddedListener.onMarkerFailed(title, snippet, OnMarkerAddedListener.ERROR_NETWORK);
 
 //                                        dialog.dismiss();
-                                        progressDialog.dismiss();
+//                                        progressDialog.dismiss();
+                                        InterfaceUtils.blinkView(btn, false);
                                         isAddingMarker = false;
                                     }
                                 }));
@@ -424,24 +492,21 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                 }, Constants.ANIM_SLOW_DURATION);
             }
 
+            /**
+             * 地图动画移动到当前所在点时，用户点按地图，导致移动失败取消
+             */
             @Override
             public void onCancel() {
                 if (onLocationChangedListener != null)
-                    onMarkerAddedListener.onMarkerFailed(title, snippet, 3);
+                    onMarkerAddedListener.onMarkerFailed(title, snippet, OnMarkerAddedListener.CANCELLED);
                 isAddingMarker = false;
             }
         });
     }
 
-    @Override
-    public void onHeadingChanged(int heading) {
-
-//        headingGap = heading - (int) aMap.getCameraPosition().bearing;
-//        this.heading = (headingGap + (int) aMap.getCameraPosition().bearing) % 360;
-//        aMap.setMyLocationRotateAngle(this.heading);
-    }
-
-
+    /**
+     * 加载据点
+     */
     public void loadMarkers() {
 
         int delay = 1000; // 防止太快获取座标出错
@@ -532,6 +597,38 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
         }, delay);
     }
 
+    /**
+     * 设备朝向监听
+     *
+     * @param heading 当前的朝向，12点方向为0，逆时针增加
+     */
+    @Override
+    public void onHeadingChanged(int heading) {
+
+//        headingGap = heading - (int) aMap.getCameraPosition().bearing;
+//        this.heading = (headingGap + (int) aMap.getCameraPosition().bearing) % 360;
+//        aMap.setMyLocationRotateAngle(this.heading);
+    }
+
+    /**
+     * {@link InfoWindowAdapter} 中按钮点击事件监听
+     *
+     * @param marker 发生点击事件的 {@link Marker}
+     */
+    @Override
+    public void onInfoWindowButtonClicked(Marker marker) {
+        if (onCaptureButtonClickedListener != null) {
+            if (AMapUtils.calculateLineDistance(marker.getPosition(), new LatLng(aMap.getMyLocation().getLatitude(), aMap.getMyLocation().getLongitude())) <= Constants.GAMING_CAPTURE_RANGE) {
+                onCaptureButtonClickedListener.onCaptureButtonClicked(true, marker);
+            } else {
+                onCaptureButtonClickedListener.onCaptureButtonClicked(false, marker);
+            }
+        }
+    }
+
+    /**
+     * 激活定位装置
+     */
     private void requestLocation() {
         if (locationManagerProxy == null) {
             locationManagerProxy = LocationManagerProxy.getInstance(fragment.getActivity());
@@ -570,69 +667,143 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
     public void onDestroy() {
         mapView.onDestroy();
-        markerForce1.recycle();
-        markerForce2.recycle();
     }
 
     public void onLowMemory() {
         mapView.onLowMemory();
     }
 
+    /**
+     * 查询设备 GPS 是否开启
+     *
+     * @return {@code true} 为开启， {@code false} 为关闭
+     */
     public boolean isGPSEnabled() {
         LocationManager locationManager = (LocationManager) fragment.getActivity().getSystemService(Context.LOCATION_SERVICE);
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
+    /**
+     * 获取默认样式的 {@link Marker}
+     *
+     * @param latLng 需要获取 {@link Marker} 的经纬度
+     * @param force  需要获取 {@link Marker} 的阵营，从 {@link ng.latitude.support.conf.Constants.Force} 中选择
+     * @return 指定经纬度、指定阵营的默认样式 {@link Marker}
+     */
     private MarkerOptions getDefaultMarkerOptions(LatLng latLng, int force) {
         return new MarkerOptions()
                 .anchor(0.5f, 0.9f)
                 .position(latLng)
                 .draggable(false)
-                .icon(BitmapDescriptorFactory.fromBitmap(force == Constants.Force.ONE ? markerForce1.copy(markerForce1.getConfig(), false) : markerForce2.copy(markerForce2.getConfig(), false)));
+                .icon(BitmapDescriptorFactory.fromResource(force == Constants.Force.ONE ? R.drawable.marker_force_1 : R.drawable.marker_force_2));
     }
 
-
-    @Override
-    public void onInfoWindowButtonClicked(Marker marker) {
-        if (onCaptureButtonClickedListener != null) {
-            if (AMapUtils.calculateLineDistance(marker.getPosition(), new LatLng(aMap.getMyLocation().getLatitude(), aMap.getMyLocation().getLongitude())) <= Constants.GAMING_CAPTURE_RANGE) {
-                onCaptureButtonClickedListener.onCaptureButtonClicked(true, marker);
-            } else {
-                onCaptureButtonClickedListener.onCaptureButtonClicked(false, marker);
-            }
-        }
-    }
-
-
+    /**
+     * {@link Marker} 添加事件监听器
+     */
     public interface OnMarkerAddedListener {
+        int SUCCEEDED = 1;
+        int ERROR_UNKNOWN = 2;
+        int ERROR_MORE_THAN_THREE_SPOTS = 0;
+        int ERROR_NETWORK = -1;
+        int CANCELLED = 3;
+
+        /**
+         * {@link Marker} 被成功添加到地图上
+         */
         void onMarkerAdded();
 
+        /**
+         * 添加 {@link Marker} 到地图失败
+         *
+         * @param title   {@link Marker} 的标题
+         * @param snippet {@link Marker} 的描述
+         * @param state   添加失败识别码，从 {@link ng.latitude.support.map.MapUnit.OnMarkerAddedListener} 中选择
+         */
         void onMarkerFailed(String title, String snippet, int state);
+
     }
 
+    /**
+     * 定位状态监听器
+     */
     public interface OnLocationFixListener {
+
+        /**
+         * 开始定位
+         */
         void startFixLocation();
 
+        /**
+         * 停止定位
+         */
         void stopFixLocation();
 
+        /**
+         * WIFI 定位
+         */
         void lbsFixedLocation();
 
+        /**
+         * GPS 定位
+         */
         void gpsFixedLocation();
 
+        /**
+         * GPS 设备状态
+         *
+         * @param status 当前 GPS 设备的状态， {@code true} 为已开启， {@code false} 为关闭
+         */
         void gpsStatus(boolean status);
     }
 
+    /**
+     * “占领”按钮点击事件监听器
+     */
     public interface OnCaptureButtonClickedListener {
+
+        /**
+         * “占领”按钮点击事件
+         *
+         * @param inRange 是否处在占领范围内， {@code true} 为在范围内可占领， {@code false} 为不处在范围内
+         * @param marker  发生点击事件的 {@link Marker}
+         */
         void onCaptureButtonClicked(boolean inRange, Marker marker);
     }
 
+    /**
+     * 据点加载完成事件监听器
+     */
     public interface OnMarkerLoadListener {
+
+        /**
+         * 据点加载完成事件
+         *
+         * @param success 据点是否成功完成加载， {@code true} 为成功加载， {@code false} 为加载失败
+         */
         void onMarkerLoaded(boolean success);
 
+        /**
+         * 据点开始加载事件
+         */
         void onMarkerStartLoading();
     }
 
+    /**
+     * 据点阵营改变事件监听器
+     */
     public interface OnSpotForceChangedListener {
+
+        int ERROR_NETWORK = -1;
+        int SUCCEEDED = 1;
+        int FAILED = 0;
+
+        /**
+         * 据点阵营改变事件
+         *
+         * @param state  阵营改变状态，从 {@link ng.latitude.support.map.MapUnit.OnSpotForceChangedListener} 中选择
+         * @param marker 发生阵营改变事件的 {@link Marker}
+         */
         void onSpotForceChanged(int state, Marker marker);
     }
 

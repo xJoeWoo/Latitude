@@ -1,7 +1,10 @@
 package ng.latitude.support.bean;
 
 /**
- * Created by Ng on 15/6/15.
+ * Created by Ng on 15/6/15
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class SetSpotBean {
 

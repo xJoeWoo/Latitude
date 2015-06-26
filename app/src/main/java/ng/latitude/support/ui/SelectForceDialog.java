@@ -14,7 +14,10 @@ import ng.latitude.R;
 import ng.latitude.support.conf.Constants;
 
 /**
- * Created by Ng on 15/6/15.
+ * Created by Ng on 15/6/15
+ *
+ * All Rights Reserved by Ng
+ * Copyright © 2015
  */
 public class SelectForceDialog extends DialogFragment {
 
