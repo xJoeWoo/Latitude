@@ -17,14 +17,14 @@ import ng.latitude.R;
  * All Rights Reserved by Ng
  * Copyright © 2015
  */
-public class AddMarketDialog extends DialogFragment {
+public class AddMarkerDialog extends DialogFragment {
 
     private static final String TITLE = "title";
     private static final String SNIPPET = "snippet";
     private OnAddMarkerDialogListener onAddMarkerDialogListener;
 
-    public static AddMarketDialog newInstance(String title, String snippet) {
-        AddMarketDialog fragment = new AddMarketDialog();
+    public static AddMarkerDialog newInstance(String title, String snippet) {
+        AddMarkerDialog fragment = new AddMarkerDialog();
         Bundle args = new Bundle();
         args.putString(TITLE, title == null ? "" : title);
         args.putString(SNIPPET, snippet == null ? "" : snippet);
@@ -97,7 +97,7 @@ public class AddMarketDialog extends DialogFragment {
     }
 
     /**
-     * {@link AddMarketDialog} 的添加据点确认、取消事件监听器
+     * {@link AddMarkerDialog} 的添加据点确认、取消事件监听器
      */
     public interface OnAddMarkerDialogListener {
 

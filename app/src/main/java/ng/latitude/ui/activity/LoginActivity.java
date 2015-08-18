@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,7 +14,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -49,7 +49,7 @@ import ng.latitude.support.ui.SelectForceDialog;
  * All Rights Reserved by Ng
  * Copyright © 2015
  */
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends Activity {
 
     private Button btnLogin;
     private Button btnLogon;
@@ -60,53 +60,17 @@ public class LoginActivity extends AppCompatActivity {
     private CoordinatorLayout snackBarLayout;
     private RelativeLayout container;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.act_login);
-
         findViews();
         setListeners();
-
-        if (Constants.DEBUG) {
-            etAccount.setText("ng");
-            etPassword.setText("233");
-            btnLogin.performClick();
-        }
-
-        etAccount.setText(PreferenceUtils.getString(PreferenceUtils.KEY_ACCOUNT));
-
-        Typeface typeface = Typeface.createFromAsset(getAssets(), "Roboto-LightItalic.ttf");
-
-        final TextView tvLogo = (TextView) findViewById(R.id.login_logo);
-        tvLogo.setTypeface(typeface);
-        ((TextView) findViewById(R.id.login_pop_logo)).setTypeface(typeface);
-
-        final Handler handler = new Handler();
-
-
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                ObjectAnimator oa = ObjectAnimator.ofFloat(tvLogo, InterfaceUtils.AnimPropertyName.ALPHA, 0f, 1f).setDuration(Constants.ANIM_LOGIN_LOGO_ANIM_DURATION);
-                oa.setInterpolator(GravityInterpolator.getInstance(true));
-                oa.start();
-            }
-        }, Constants.ANIM_LOGIN_LOGO_DELAY_TIME);
-
-
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                ObjectAnimator oa = ObjectAnimator.ofFloat(container, InterfaceUtils.AnimPropertyName.ALPHA, 0f, 1f).setDuration(Constants.ANIM_LOGIN_POP_ANIM_DURATION);
-                oa.setInterpolator(GravityInterpolator.getInstance(true));
-                oa.start();
-            }
-        }, Constants.ANIM_LOGIN_POP_DELAY_TIME);
-
+        showContent();
     }
 
-    private void findViews() {
+    protected void findViews() {
         btnLogin = (Button) findViewById(R.id.btn_login);
         btnLogon = (Button) findViewById(R.id.btn_logon);
         etAccount = (EditText) findViewById(R.id.et_login_account);
@@ -117,7 +81,7 @@ public class LoginActivity extends AppCompatActivity {
         container = (RelativeLayout) findViewById(R.id.login_pop_container);
     }
 
-    private void setListeners() {
+    protected void setListeners() {
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -160,6 +124,44 @@ public class LoginActivity extends AppCompatActivity {
                 return false;
             }
         });
+    }
+
+    protected void showContent() {
+        if (Constants.DEBUG) {
+            etAccount.setText("ng");
+            etPassword.setText("233");
+            btnLogin.performClick();
+        }
+
+        etAccount.setText(PreferenceUtils.getString(PreferenceUtils.KEY_ACCOUNT));
+
+        Typeface typeface = Typeface.createFromAsset(getAssets(), "Roboto-LightItalic.ttf");
+
+        final TextView tvLogo = (TextView) findViewById(R.id.login_logo);
+        tvLogo.setTypeface(typeface);
+        ((TextView) findViewById(R.id.login_pop_logo)).setTypeface(typeface);
+
+        final Handler handler = new Handler();
+
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ObjectAnimator oa = ObjectAnimator.ofFloat(tvLogo, InterfaceUtils.AnimPropertyName.ALPHA, 0f, 1f).setDuration(Constants.ANIM_LOGIN_LOGO_ANIM_DURATION);
+                oa.setInterpolator(GravityInterpolator.getInstance(true));
+                oa.start();
+            }
+        }, Constants.ANIM_LOGIN_LOGO_DELAY_TIME);
+
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ObjectAnimator oa = ObjectAnimator.ofFloat(container, InterfaceUtils.AnimPropertyName.ALPHA, 0f, 1f).setDuration(Constants.ANIM_LOGIN_POP_ANIM_DURATION);
+                oa.setInterpolator(GravityInterpolator.getInstance(true));
+                oa.start();
+            }
+        }, Constants.ANIM_LOGIN_POP_DELAY_TIME);
     }
 
     /**
@@ -235,7 +237,7 @@ public class LoginActivity extends AppCompatActivity {
             });
             dialog.show(getFragmentManager(), "SelectForceDialog");
 
-        } else { // 未展开
+        } else { // 未展开动画
 
             final RelativeLayout buttonsContainer = (RelativeLayout) findViewById(R.id.login_pop_buttons_container);
             final RelativeLayout.LayoutParams containerLayoutParams = (RelativeLayout.LayoutParams) container.getLayoutParams();

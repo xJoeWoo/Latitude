@@ -7,12 +7,12 @@ android {
         applicationId "ng.latitude"
         minSdkVersion 15
         targetSdkVersion 22
-        versionCode 11
-        versionName "0.0622"
+        versionCode 13
+        versionName "0.0723"
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -24,7 +24,4 @@ dependencies {
     compile 'com.google.code.gson:gson:2.3'
     compile 'com.mcxiaoke.volley:library:1.0.16'
     compile 'com.android.support:design:22.2.0'
-    compile files('libs/AMap_3DMap_V2.4.1.jar')
-    compile "com.github.andkulikov:transitions-everywhere:1.4.0"
-
 }

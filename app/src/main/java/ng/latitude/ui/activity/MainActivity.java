@@ -3,6 +3,7 @@ package ng.latitude.ui.activity;
 import android.app.Fragment;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 
 import ng.latitude.R;
 import ng.latitude.support.conf.Constants;
@@ -18,6 +19,12 @@ import ng.latitude.ui.fragment.MapFragment;
  */
 
 public class MainActivity extends SingleFragmentActivity {
+
+    private static final Handler handler = new Handler();
+
+    public Handler getHandler() {
+        return handler;
+    }
 
     @Override
     protected Fragment inflateFragment() {

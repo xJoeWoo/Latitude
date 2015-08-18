@@ -3,7 +3,6 @@ package ng.latitude.ui.fragment;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
-import android.app.Fragment;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,12 +10,10 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.amap.api.maps.MapView;
@@ -34,11 +31,14 @@ import ng.latitude.support.conf.Latitude;
 import ng.latitude.support.map.MapUnit;
 import ng.latitude.support.network.GsonRequest;
 import ng.latitude.support.network.HttpUtils;
+import ng.latitude.support.ui.AddMarkerDialog;
+import ng.latitude.support.ui.BaseFragment;
 import ng.latitude.support.ui.BottomInfo;
 import ng.latitude.support.ui.GravityInterpolator;
 import ng.latitude.support.ui.InterfaceUtils;
 import ng.latitude.support.ui.ScoreView;
 import ng.latitude.support.ui.SingleFragmentActivity;
+import ng.latitude.ui.activity.MainActivity;
 
 /**
  * Created by Ng on 15/6/8
@@ -46,20 +46,18 @@ import ng.latitude.support.ui.SingleFragmentActivity;
  * All Rights Reserved by Ng
  * Copyright © 2015
  */
-public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListener
+public class MapFragment extends BaseFragment implements MapUnit.OnMarkerAddedListener
         , MapUnit.OnLocationFixListener, SingleFragmentActivity.OnBackPressedListener
         , MapUnit.OnCaptureButtonClickedListener, MapUnit.OnMarkerLoadListener, MapUnit.OnSpotForceChangedListener {
 
 
-    private final Handler handler = new Handler();
-    private SingleFragmentActivity activity;
-    private View rootView;
+    private Handler handler;
+    private MainActivity activity;
     private ImageView ivSetPosition;
-    //    private BottomButtons bBtn;
     private BottomInfo bInf;
     private MapUnit mapUtils;
     private ScoreView scoreView;
-    private SingleFragmentActivity.BackStatus currentBackStatus = SingleFragmentActivity.BackStatus.Normal;
+    private MainActivity.BackStatus currentBackStatus = SingleFragmentActivity.BackStatus.Normal;
     private CoordinatorLayout snackBarLayout;
     private Runnable refreshSpotsRunnable = new Runnable() {
         @Override
@@ -78,70 +76,21 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     };
 
     public static MapFragment newInstance() {
-        return new MapFragment();
+        MapFragment mapFragment = new MapFragment();
+        mapFragment.setContentView(R.layout.frag_main);
+        return mapFragment;
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-        rootView = inflater.inflate(R.layout.frag_main, container, false);
-
-        findViews(rootView);
-
-        Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
-        toolbar.setTitleTextColor(getResources().getColor(android.R.color.white));
-
-        scoreView = new ScoreView(toolbar);
-
-        activity = (SingleFragmentActivity) getActivity();
-        activity.setSupportActionBar(toolbar);
-
-        return rootView;
-    }
-
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        mapUtils = new MapUnit(this, (MapView) rootView.findViewById(R.id.map_main));
-        mapUtils.onCreate(savedInstanceState);
-        setListeners();
-
-        if (!Latitude.getUserInfo().getName().isEmpty() && activity.getSupportActionBar() != null)
-            activity.getSupportActionBar().setTitle(Latitude.getUserInfo().getName());
-
-        activity.getSupportActionBar().setBackgroundDrawable(new ColorDrawable(activity.getResources()
-                .getColor(Latitude.getUserInfo().getForce() == Constants.Force.ONE ? R.color.force_1 : R.color.force_2)));
-
-        scoreView.updateScore(); // 先显示登录时的分数
-    }
-
-    private void findViews(View v) {
+    protected void findViews(View v) {
         ivSetPosition = (ImageView) v.findViewById(R.id.iv_main_set_position);
-//        bBtn = (BottomButtons) v.findViewById(R.id.bbtn_main);
         bInf = (BottomInfo) v.findViewById(R.id.binf_main);
         snackBarLayout = (CoordinatorLayout) v.findViewById(R.id.snb_main);
+        mapUtils = new MapUnit(this, (MapView) v.findViewById(R.id.map_main));
     }
 
-    private void setListeners() {
-//        bBtn.setListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-////                addMarkerToMap(aMap.getCameraPosition().target);
-//                mapUtils.addMarkerToMap();
-//            }
-//        }, new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                setPosition(false);
-//            }
-//        });
+    @Override
+    protected void setListeners() {
         mapUtils.setOnMarkerAddedListener(this);
         mapUtils.setOnLocationFixListener(this);
         mapUtils.setOnCaptureButtonClickedListener(this);
@@ -149,6 +98,31 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
         mapUtils.setOnSpotForceChangedListener(this);
     }
 
+    @Override
+    protected void showContent() {
+        Toolbar toolbar = (Toolbar) getRootView().findViewById(R.id.toolbar);
+        toolbar.setTitleTextColor(getResources().getColor(android.R.color.white));
+        scoreView = new ScoreView(toolbar);
+        activity = (MainActivity) getActivity();
+        activity.setSupportActionBar(toolbar);
+
+        handler = activity.getHandler();
+
+        if (activity.getSupportActionBar() != null) {
+            activity.getSupportActionBar().setBackgroundDrawable(new ColorDrawable(activity.getResources()
+                    .getColor(Latitude.getUserInfo().getForce() == Constants.Force.ONE ? R.color.force_1 : R.color.force_2)));
+            if (!Latitude.getUserInfo().getName().isEmpty())
+                activity.getSupportActionBar().setTitle(Latitude.getUserInfo().getName());
+        }
+
+        scoreView.updateScore(); // 先显示登录时的分数
+    }
+
+    /**
+     * 更新 {@link ScoreView} 上的分数
+     *
+     * @param scoreView 需要更新分数的 {@link ScoreView}
+     */
     private void updateScore(final ScoreView scoreView) {
 
         if (!isUpdatingScore) {
@@ -181,89 +155,31 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
 
     }
 
-
-    @Override
-    public void onMarkerAdded() {
-        setPosition(false);
-        mapUtils.loadMarkers();
-    }
-
-    @Override
-    public void onMarkerFailed(String title, String snippet, int state) {
-
-
-        setPosition(false);
-
-        switch (state) {
-            case MapUnit.OnMarkerAddedListener.ERROR_UNKNOWN:
-                Snackbar.make(snackBarLayout, R.string.toast_spot_create_failed, Snackbar.LENGTH_SHORT).show();
-                mapUtils.addMarkerToMap(title, snippet);
-                break;
-            case MapUnit.OnMarkerAddedListener.ERROR_MORE_THAN_THREE_SPOTS:
-                Snackbar.make(snackBarLayout, R.string.toast_spot_over_limit, Snackbar.LENGTH_LONG).show();
-                break;
-            case MapUnit.OnMarkerAddedListener.CANCELLED:
-                break;
-            default:
-                Snackbar.make(snackBarLayout, R.string.toast_network_error, Snackbar.LENGTH_SHORT).show();
-                mapUtils.addMarkerToMap(title, snippet);
-                break;
-
-        }
-    }
-
-
-    @Override
-    public void startFixLocation() {
-        bInf.show();
-        Log.e("TAG", String.valueOf("startFix"));
-    }
-
-    @Override
-    public void stopFixLocation() {
-        bInf.hide();
-        Log.e("TAG", String.valueOf("stopFix"));
-    }
-
-    @Override
-    public void lbsFixedLocation() {
-        bInf.show();
-        bInf.setMainText(R.string.widget_bottom_info_main_gps);
-        Log.e("TAG", String.valueOf("lbsFixed"));
-    }
-
-    @Override
-    public void gpsFixedLocation() {
-        bInf.hide();
-        bInf.reset();
-        Log.e("TAG", String.valueOf("gpsFixed"));
-    }
-
-    @Override
-    public void gpsStatus(boolean status) {
-        if (status)
-            bInf.setSubText(R.string.widget_bottom_info_sub);
-        else
-            bInf.setSubText(R.string.widget_bottom_info_sub_gps_not_available);
-    }
-
+    /**
+     * 弹出或因此显示添加据点对话框 {@link AddMarkerDialog}
+     *
+     * @param isSetting {@code true} 为弹出，{@code false} 为隐藏
+     */
     public void setPosition(boolean isSetting) {
         if (isSetting) {
             currentBackStatus = SingleFragmentActivity.BackStatus.SettingPosition;
             activity.findViewById(R.id.action_add).setVisibility(View.GONE);
             startSetPositionAnim(true);
             mapUtils.addMarkerToMap();
-//            bBtn.show();
         } else {
-            activity.findViewById(R.id.action_add).setVisibility(View.VISIBLE);
             currentBackStatus = SingleFragmentActivity.BackStatus.Normal;
+            activity.findViewById(R.id.action_add).setVisibility(View.VISIBLE);
             startSetPositionAnim(false);
-//            bBtn.hide();
         }
     }
 
+    /**
+     * 弹出或隐藏添加据点对话框及“目标”图片时的动画
+     *
+     * @param visible {@code true} 为弹出，{@code false} 为隐藏
+     */
     private void startSetPositionAnim(final boolean visible) {
-        float transY = rootView.findViewById(R.id.rv_main).getHeight() - ivSetPosition.getY();
+        float transY = getRootView().findViewById(R.id.rv_main).getHeight() - ivSetPosition.getY();
         final ObjectAnimator oa = ObjectAnimator.ofFloat(ivSetPosition, InterfaceUtils.AnimPropertyName.TRANSLATION_Y, visible ? transY : 0, 0).setDuration(Constants.ANIM_SLOW_DURATION);
         oa.setInterpolator(GravityInterpolator.getInstance(visible));
         oa.addListener(new AnimatorListenerAdapter() {
@@ -285,6 +201,71 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
     }
 
     @Override
+    public void onMarkerAdded() {
+        setPosition(false);
+        mapUtils.loadMarkers();
+    }
+
+    @Override
+    public void onMarkerFailed(String title, String snippet, int state) {
+
+        setPosition(false);
+
+        switch (state) {
+            case MapUnit.OnMarkerAddedListener.ERROR_UNKNOWN:
+                Snackbar.make(snackBarLayout, R.string.toast_spot_create_failed, Snackbar.LENGTH_SHORT).show();
+                mapUtils.addMarkerToMap(title, snippet);
+                break;
+            case MapUnit.OnMarkerAddedListener.ERROR_MORE_THAN_THREE_SPOTS:
+                Snackbar.make(snackBarLayout, R.string.toast_spot_over_limit, Snackbar.LENGTH_LONG).show();
+                break;
+            case MapUnit.OnMarkerAddedListener.CANCELLED:
+                break;
+            default:
+                Snackbar.make(snackBarLayout, R.string.toast_network_error, Snackbar.LENGTH_SHORT).show();
+                mapUtils.addMarkerToMap(title, snippet);
+                break;
+
+        }
+    }
+
+    @Override
+    public void onFixState(int state) {
+        switch (state) {
+            case STATE_START_FIX:
+                bInf.show();
+                Log.e("TAG", String.valueOf("startFix"));
+                break;
+
+            case STATE_STOP_FIX:
+                bInf.hide();
+                Log.e("TAG", String.valueOf("stopFix"));
+                break;
+
+            case STATE_LBS_FIXED: // 不显示精确定位中
+//                bInf.show();
+//                bInf.setMainText(R.string.widget_bottom_info_main_gps);
+//                Log.e("TAG", String.valueOf("lbsFixed"));
+//                break;
+
+            case STATE_GPS_FIXED:
+                bInf.hide();
+                bInf.reset();
+                Log.e("TAG", String.valueOf("gpsFixed"));
+                break;
+        }
+
+    }
+
+    @Override
+    public void onGpsState(boolean state) {
+        if (state)
+            bInf.setSubText(R.string.widget_bottom_info_sub);
+        else
+            bInf.setSubText(R.string.widget_bottom_info_sub_gps_not_available);
+    }
+
+    @Override
     public boolean onActivityBackPressed() {
         switch (currentBackStatus) {
             case SettingPosition:
@@ -293,6 +274,49 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
             case Normal:
             default:
                 return true;
+        }
+    }
+
+    @Override
+    public void onMarkerLoaded(boolean success) {
+        if (success) {
+            Snackbar.make(snackBarLayout, R.string.toast_spot_loaded, Snackbar.LENGTH_SHORT).show();
+        } else {
+//            Snackbar.make(snackBarLayout, R.string.toast_network_error, Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onMarkerStartLoading() {
+
+
+    }
+
+    @Override
+    public void onCaptureButtonClicked(boolean inRange, Marker marker) {
+        if (inRange) {
+//            SpotActionDialog.getInstance(spotBean).setOnSpotForceChangedListener(this).show(getFragmentManager(), "SpotActionDialog");
+            mapUtils.changeSpotForce(marker, Latitude.getUserInfo().getForce());
+        } else {
+            Snackbar.make(snackBarLayout, R.string.toast_move_to_range, Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onSpotForceChanged(int state, Marker marker) {
+
+        switch (state) {
+            case MapUnit.OnSpotForceChangedListener.SUCCEEDED:
+//                mapUtils.changeSpotForce(spotId, Latitude.getUserInfo().getForce());
+                Snackbar.make(snackBarLayout, R.string.toast_spot_capture_succeed, Snackbar.LENGTH_LONG).show();
+                updateScore(scoreView);
+                break;
+            case MapUnit.OnSpotForceChangedListener.FAILED:
+                Snackbar.make(snackBarLayout, R.string.toast_spot_capture_failed, Snackbar.LENGTH_SHORT).show();
+                break;
+            case MapUnit.OnSpotForceChangedListener.ERROR_NETWORK:
+                Snackbar.make(snackBarLayout, R.string.toast_network_error, Snackbar.LENGTH_SHORT).show();
+                break;
         }
     }
 
@@ -312,6 +336,12 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        mapUtils.onCreate(savedInstanceState);
     }
 
     @Override
@@ -357,49 +387,5 @@ public class MapFragment extends Fragment implements MapUnit.OnMarkerAddedListen
         mapUtils.onLowMemory();
     }
 
-
-    @Override
-    public void onMarkerLoaded(boolean success) {
-        if (success) {
-            Snackbar.make(snackBarLayout, R.string.toast_spot_loaded, Snackbar.LENGTH_SHORT).show();
-        } else {
-//            Snackbar.make(snackBarLayout, R.string.toast_network_error, Snackbar.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    public void onMarkerStartLoading() {
-
-
-    }
-
-    @Override
-    public void onCaptureButtonClicked(boolean inRange, Marker marker) {
-        if (inRange) {
-//            SpotActionDialog.getInstance(spotBean).setOnSpotForceChangedListener(this).show(getFragmentManager(), "SpotActionDialog");
-            mapUtils.changeSpotForce(marker, Latitude.getUserInfo().getForce());
-        } else {
-            Snackbar.make(snackBarLayout, R.string.toast_move_to_range, Snackbar.LENGTH_SHORT).show();
-        }
-    }
-
-
-    @Override
-    public void onSpotForceChanged(int state, Marker marker) {
-
-        switch (state) {
-            case MapUnit.OnSpotForceChangedListener.SUCCEEDED:
-//                mapUtils.changeSpotForce(spotId, Latitude.getUserInfo().getForce());
-                Snackbar.make(snackBarLayout, R.string.toast_spot_capture_succeed, Snackbar.LENGTH_LONG).show();
-                updateScore(scoreView);
-                break;
-            case MapUnit.OnSpotForceChangedListener.FAILED:
-                Snackbar.make(snackBarLayout, R.string.toast_spot_capture_failed, Snackbar.LENGTH_SHORT).show();
-                break;
-            case MapUnit.OnSpotForceChangedListener.ERROR_NETWORK:
-                Snackbar.make(snackBarLayout, R.string.toast_network_error, Snackbar.LENGTH_SHORT).show();
-                break;
-        }
-    }
 
 }

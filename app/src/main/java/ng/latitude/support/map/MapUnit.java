@@ -47,7 +47,7 @@ import ng.latitude.support.conf.Latitude;
 import ng.latitude.support.conf.PreferenceUtils;
 import ng.latitude.support.network.GsonRequest;
 import ng.latitude.support.network.HttpUtils;
-import ng.latitude.support.ui.AddMarketDialog;
+import ng.latitude.support.ui.AddMarkerDialog;
 import ng.latitude.support.ui.InterfaceUtils;
 import ng.latitude.support.ui.LatitudeProgressDialog;
 
@@ -91,7 +91,7 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
         @Override
         public void onLocationChanged(AMapLocation aLocation) {
             if (onLocationFixListener != null)
-                onLocationFixListener.gpsStatus(isGPSEnabled());
+                onLocationFixListener.onGpsState(isGPSEnabled());
 
             LatLng currentFix = new LatLng(aLocation.getLatitude(), aLocation.getLongitude());
 
@@ -104,10 +104,10 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
                 if (provider.equals(Constants.LOCATION_PROVIDER_GPS)) {// GPS定位
                     if (onLocationFixListener != null)
-                        onLocationFixListener.gpsFixedLocation();
+                        onLocationFixListener.onFixState(OnLocationFixListener.STATE_GPS_FIXED);
                 } else if (provider.equals(Constants.LOCATION_PROVIDER_LBS)) {// 网络定位
                     if (onLocationFixListener != null)
-                        onLocationFixListener.lbsFixedLocation();
+                        onLocationFixListener.onFixState(OnLocationFixListener.STATE_LBS_FIXED);
                 }
 
 //            aLocation.setBearing(Math.abs(heading - 90) % 360); // 总之要减90
@@ -187,7 +187,7 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
             locationManagerProxy = null;
 
             if (onLocationFixListener != null)
-                onLocationFixListener.stopFixLocation();
+                onLocationFixListener.onFixState(OnLocationFixListener.STATE_STOP_FIX);
         }
     };
 
@@ -306,6 +306,16 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
     }
 
     /**
+     * 查询设备 GPS 是否开启
+     *
+     * @return {@code true} 为开启， {@code false} 为关闭
+     */
+    public static boolean isGPSEnabled() {
+        LocationManager locationManager = (LocationManager) Latitude.getContext().getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
+    /**
      * 设置设备位置改变事件监听
      *
      * @param onLocationFixListener 位置改变事件监听器
@@ -396,17 +406,17 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
     }
 
     /**
-     * 添加 {@link Marker} 到地图上，将弹出 {@link AddMarketDialog} ，且 {@link AddMarketDialog} 中数据为空
+     * 添加 {@link Marker} 到地图上，将弹出 {@link AddMarkerDialog} ，且 {@link AddMarkerDialog} 中数据为空
      */
     public void addMarkerToMap() {
         addMarkerToMap(null, null);
     }
 
     /**
-     * 添加 {@link Marker} 到地图上，将弹出 {@link AddMarketDialog} ，且 {@link AddMarketDialog} 中数据为指定数据
+     * 添加 {@link Marker} 到地图上，将弹出 {@link AddMarkerDialog} ，且 {@link AddMarkerDialog} 中数据为指定数据
      *
-     * @param title   显示在 {@link AddMarketDialog} 中的标题
-     * @param snippet 显示在 {@link AddMarketDialog} 中的描述
+     * @param title   显示在 {@link AddMarkerDialog} 中的标题
+     * @param snippet 显示在 {@link AddMarkerDialog} 中的描述
      */
     public void addMarkerToMap(final String title, final String snippet) {
         isAddingMarker = true;
@@ -422,8 +432,8 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                     @Override
                     public void run() {
 
-                        final AddMarketDialog dialog = AddMarketDialog.newInstance(title, snippet);
-                        dialog.setOnAddMarkerDialogListener(new AddMarketDialog.OnAddMarkerDialogListener() {
+                        final AddMarkerDialog dialog = AddMarkerDialog.newInstance(title, snippet);
+                        dialog.setOnAddMarkerDialogListener(new AddMarkerDialog.OnAddMarkerDialogListener() {
                             @Override
                             public void onAddMarkerDialogCancelled() {
                                 if (onLocationChangedListener != null)
@@ -639,7 +649,7 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
                     LocationProviderProxy.AMapNetwork, Constants.LOCATION_UPDATE_INTERVAL, Constants.LOCATION_UPDATE_ACCURATE, aMapLocationListener);
 
             if (onLocationFixListener != null)
-                onLocationFixListener.startFixLocation();
+                onLocationFixListener.onFixState(OnLocationFixListener.STATE_START_FIX);
         }
     }
 
@@ -671,16 +681,6 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
 
     public void onLowMemory() {
         mapView.onLowMemory();
-    }
-
-    /**
-     * 查询设备 GPS 是否开启
-     *
-     * @return {@code true} 为开启， {@code false} 为关闭
-     */
-    public boolean isGPSEnabled() {
-        LocationManager locationManager = (LocationManager) fragment.getActivity().getSystemService(Context.LOCATION_SERVICE);
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
     /**
@@ -729,32 +729,23 @@ public class MapUnit implements SensorUnit.OnHeadingChangedListener, InfoWindowA
      */
     public interface OnLocationFixListener {
 
-        /**
-         * 开始定位
-         */
-        void startFixLocation();
+        int STATE_START_FIX = 0;
+        int STATE_STOP_FIX = 1;
+        int STATE_LBS_FIXED = 2;
+        int STATE_GPS_FIXED = 3;
 
         /**
-         * 停止定位
+         * 定位状态，返回当前定位状态
+         * @param state 定位状态，从 {@link ng.latitude.support.map.MapUnit.OnLocationFixListener} 中选择
          */
-        void stopFixLocation();
-
-        /**
-         * WIFI 定位
-         */
-        void lbsFixedLocation();
-
-        /**
-         * GPS 定位
-         */
-        void gpsFixedLocation();
+        void onFixState(int state);
 
         /**
          * GPS 设备状态
          *
-         * @param status 当前 GPS 设备的状态， {@code true} 为已开启， {@code false} 为关闭
+         * @param state 当前 GPS 设备的状态， {@code true} 为已开启， {@code false} 为关闭
          */
-        void gpsStatus(boolean status);
+        void onGpsState(boolean state);
     }
 
     /**
